@@ -18,7 +18,7 @@ const MapContainer = compose(
     googleMapURL: "https://maps.googleapis.com/maps/api/js?key=AIzaSyDSbOVMr0GAABOWMFiaUZJqjWrWu9p00fw&v=3&libraries=geometry,drawing,places",
     loadingElement: <div style={{ height: `100%` }} />,
     containerElement: <div className="mainContainer" style={{ height: `400px` }} />,
-    mapElement: <div className="map-item" style={{ height: `100%`, margin: '0px 30px' }} />,
+    mapElement: <div className="map-item" style={{ height: `100%`, margin: '0px 30px' }} />
   }),
 
   lifecycle({
@@ -42,7 +42,7 @@ const MapContainer = compose(
         },
         onMapMounted: ref => {
           refs.map = ref;
-          console.log("2222222222222222222222222222");
+          console.log("test map");
           let newmarker = {};
           newmarker.position = new google.maps.LatLng(parseFloat(this.props.post.lat), parseFloat(this.props.post.lon));
           let markers = [newmarker];      

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
+import SimpleReactValidator from 'simple-react-validator';
 
 class NewForm extends Component {
 
@@ -11,7 +12,10 @@ class NewForm extends Component {
     this.state = {
       setNewFields: this.setNewFields.bind(this),
       answers: this.setNewFields(this.props.post),
+      handleValidate: this.handleValidate.bind(this)
     }; // <- set up react state
+
+    this.validator = new SimpleReactValidator();
   }
 
   static defaultProps = {
@@ -21,6 +25,17 @@ class NewForm extends Component {
       arrayFields: ['labels', 'question_images', 'story_images'],
       checkFields: ['tourists_relevancy', 'night_item', 'see_item']
     },
+  }
+
+  handleValidate() {
+    if (this.validator.allValid()) {
+      return true;
+    } else {
+      this.validator.showMessages();
+      this.forceUpdate();
+
+      return false;
+    }
   }
 
   setNewFields() {
@@ -104,6 +119,9 @@ class NewForm extends Component {
   // ---> 1. GCP <---
   //Submit
   addAnswers = (e) => {
+    if (!this.handleValidate())
+      return;
+
     const { answers, } = this.state;
     e.preventDefault(); // <- prevent form submit from reloading the page
 
@@ -237,8 +255,8 @@ class NewForm extends Component {
             changeToFalse={this.changeToFalse}
             addToAnswer={this.addToAnswer}
             post={this.props.post}
+            validator={this.validator}
           />
-
 
         <div style={{
           display: 'flex',

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { HashRouter as Router, Redirect } from 'react-router-dom';
+import { HashRouter as Router, Switch, Redirect } from 'react-router-dom';
 import Route from 'react-router-dom/Route';
 
 import fireDB from '../fireDB';
@@ -12,6 +12,7 @@ import Message from '../components/Message';
 import Survey from './Survey';
 import NewForm from './NewForm';
 import Login from './Login';
+import DataTable from './DataTable';
 
 import '../css/Hidden.css';
 
@@ -167,88 +168,92 @@ class App extends Component {
       }
 
       return (
-        <Router >
-          <div>
-            <Route path={"/:name"} exact render={(routeProps) => {
-              let string = "/" + routeProps.match.params.name;
-              let postExistanse = false;
-              if (number === undefined && Object.values(text).length > 0 && this.state.previosIndexList.length === 0 || routeProps.history.action == "POP") {
-                for (let i = 0, size = Object.values(text).length; i < size; i++) {
-                  if (text[i].datastore_id == routeProps.match.params.name) {
-                    submitted = false;
-                    hideMessage = true;
-                    hideDiv = false;
-                    postExistanse = true;
-                    number = i;
-                    break;
-                  }
-                }
-              }
-              if (itemId) {
-                if (!(this.state.previosIndexList.length > 0 && this.findNextUnsubmitedElement(this.state.previosIndexList[this.state.previosIndexList.length - 1] ) === number ) && this.state.previosDatascore_id != text[number].datastore_id ) {
+        <div>
+          <Router>
+            <Switch>
+              <Route path={"/:name"} exact strict render={(routeProps) => {
+                let string = "/" + routeProps.match.params.name;
+                let postExistanse = false;
+                if (number === undefined && Object.values(text).length > 0 && this.state.previosIndexList.length === 0 || routeProps.history.action == "POP") {
                   for (let i = 0, size = Object.values(text).length; i < size; i++) {
                     if (text[i].datastore_id == routeProps.match.params.name) {
                       submitted = false;
+                      hideMessage = true;
+                      hideDiv = false;
                       postExistanse = true;
                       number = i;
                       break;
                     }
                   }
                 }
+                if (itemId) {
+                  if (!(this.state.previosIndexList.length > 0 && this.findNextUnsubmitedElement(this.state.previosIndexList[this.state.previosIndexList.length - 1] ) === number ) && this.state.previosDatascore_id != text[number].datastore_id ) {
+                    for (let i = 0, size = Object.values(text).length; i < size; i++) {
+                      if (text[i].datastore_id == routeProps.match.params.name) {
+                        submitted = false;
+                        postExistanse = true;
+                        number = i;
+                        break;
+                      }
+                    }
+                  }
 
-                string = "/" + text[number].datastore_id;
+                  string = "/" + text[number].datastore_id;
 
-              }
-              isNextElementExist = this.findNextUnsubmitedElement(number) !== undefined;
-              return (
-                <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
-                  <Redirect to={string} />
-                  <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
-                    text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
-                  <div className={hideDiv ? 'hidden' : ''}>
-                    <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
-                  </div>
+                }
+                isNextElementExist = this.findNextUnsubmitedElement(number) !== undefined;
+                return (
+                  <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
+                    <Redirect to={string} />
+                    <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
+                      text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
+                    <div className={hideDiv ? 'hidden' : ''}>
+                      <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
+                    </div>
 
-                  <Survey postNum={number}
-                    showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
-                    numberOfPreviousElemnts={previosIndexList.length}
-                    nextElementExistanse={isNextElementExist}
-                    toUndef={this.toUndef}
-                    post={submitted ? '' : text[number]}
-                    user={submitted ? '' : user.email}
-                    submitted={submitted}
-                    placesList={this.state.placesList}
-                  />
-                </Top>
-              );
-            }} />
-            <Route path={"/"} exact render={() => {
-              let string = "/" + (text[number] === undefined ? "" : text[number].datastore_id);
+                    <Survey postNum={number}
+                      showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
+                      numberOfPreviousElemnts={previosIndexList.length}
+                      nextElementExistanse={isNextElementExist}
+                      toUndef={this.toUndef}
+                      post={submitted ? '' : text[number]}
+                      user={submitted ? '' : user.email}
+                      submitted={submitted}
+                      placesList={this.state.placesList}
+                    />
+                  </Top>
+                );
+              }} />
+              <Route path={"/"} exact render={() => {
+                let string = "/" + (text[number] === undefined ? "" : text[number].datastore_id);
 
-              return (
-                <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
-                  <Redirect to={string} />
-                  <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
-                    text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
-                  <div className={hideDiv ? 'hidden' : ''}>
-                    <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
-                  </div>
+                return (
+                  <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
+                    <Redirect to={string} />
+                    <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
+                      text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
+                    <div className={hideDiv ? 'hidden' : ''}>
+                      <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
+                    </div>
 
-                  <Survey postNum={number}
-                    showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
-                    numberOfPreviousElemnts={previosIndexList.length}
-                    nextElementExistanse={isNextElementExist}
-                    toUndef={this.toUndef}
-                    post={submitted ? '' : text[number]}
-                    user={submitted ? '' : user.email}
-                    submitted={submitted}
-                    placesList={this.state.placesList}
-                  />
-                </Top>
-              );
-            }} />
-          </div>
-        </Router>
+                    <DataTable data={this.state.text}/>
+                    
+                    <Survey postNum={number}
+                      showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
+                      numberOfPreviousElemnts={previosIndexList.length}
+                      nextElementExistanse={isNextElementExist}
+                      toUndef={this.toUndef}
+                      post={submitted ? '' : text[number]}
+                      user={submitted ? '' : user.email}
+                      submitted={submitted}
+                      placesList={this.state.placesList}
+                    />
+                  </Top>
+                );
+              }} />
+            </Switch>
+          </Router>
+        </div>
       )
     }
     else {

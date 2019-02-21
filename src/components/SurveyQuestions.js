@@ -10,6 +10,7 @@ import MapContainer from './MapContainer';
 import Checkbox from './Checkbox';
 
 import '../css/Segment.css';
+import { bool } from 'prop-types';
 
 const SurveyQuestions = (props) => {
 
@@ -88,7 +89,8 @@ const SurveyQuestions = (props) => {
 
     const questions = pr.questions;
     let answers = props.answers;
-
+    let validator = props.validator;
+    
     return (
         <div className="Survey">
             <form id='form'>
@@ -103,18 +105,8 @@ const SurveyQuestions = (props) => {
                     value3={answers.trivia1.wrong_answer1}
                     value4={answers.trivia1.wrong_answer2}
                     value5={answers.trivia1.wrong_answer3}
-                />
-                {/* <TriviaQuestion
-            question={questions.TRIVIA2}
-            tooltip={'answer is..'}
-            numbers={['question', 'right_answer', 'wrong_answer1', 'wrong_answer2', 'wrong_answer3']} 
-            handleTextInput={(e, number) => handleAnswerTrivia(2, number, e)}
-            value1={answers.trivia2.question}
-            value2={answers.trivia2.right_answer}
-            value3={answers.trivia2.wrong_answer1}
-            value4={answers.trivia2.wrong_answer2}
-            value5={answers.trivia2.wrong_answer3}
-          /> */}
+                    validator={validator}
+                />                           
 
                 <TextArea
                     question={questions.EDIT_TEXT}
@@ -122,7 +114,8 @@ const SurveyQuestions = (props) => {
                     value={answers.story}
                     rows={'10'}
                 />
-
+                {validator.message('short story', answers.story, 'required')}
+                
                 <Question question={questions.PLACE} />
                 <MapContainer
                     handleAnswer={(place) => handleAnswerPlace(place)}
@@ -132,43 +125,46 @@ const SurveyQuestions = (props) => {
                     changeToFalse={props.changeToFalse}
                     post={props.post}
                 />
-
-
-
+                {validator.message('google area', answers.place && answers.lat && answers.lon , 'required')}
+               
                 <ImgUploader
                     question={questions.PRE_IMG}
                     handleImgLoad={(newImg) => handleAnswerArray('question_images', newImg)}
                     answer={answers.question_images[answers.question_images.length - 1]} // to remember image 
                 />
-
+                {validator.message('asking img url', answers.question_images[answers.question_images.length - 1], 'required|url')}
+                
                 <ImgUploader
                     question={questions.POST_IMG}
                     handleImgLoad={(newImg) => handleAnswerArray('story_images', newImg)}
                     answer={answers.story_images[answers.story_images.length - 1]} // to remember image 
                 />
-
-
-
+                {validator.message('answering img url', answers.story_images[answers.story_images.length - 1], 'required|url')}
+                
                 <TextArea
                     question={questions.TITLE}
                     handleTextInput={(e) => handleAnswerArray('labels', e.target.value)}
                     value={answers.labels[answers.labels.length - 1]}
-                />
+                />                
+                {validator.message('question title/tags', answers.labels[answers.labels.length - 1], 'required')}
 
                 <Radio
                     question={questions.DIFFICULTY}
                     handleOptionChange={(e) => handleAnswer('difficulty', e)}
                     answer={answers.difficulty}
                 />
+                {validator.message('difficulty', answers.difficulty, 'required')}
+
                 <Radio
                     question={questions.INTERESTING}
                     handleOptionChange={(e) => handleAnswer('score', e)}
                     answer={answers.score}
                 />
+                {validator.message('score', answers.score, 'required')}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 30px', marginTop: "40px" }}>
                     <Checkbox question={questions.TOURISTS_REL} checked={answers.tourists_relevancy}
-                        handleCheck={(e) => handleCheck('tourists_relevancy', e)} />
+                        handleCheck={(e) => handleCheck('tourists_relevancy', e)} />                        
 
                     <Checkbox question={questions.NIGHT_ITEM} checked={answers.night_item}
                         handleCheck={(e) => handleCheck('night_item', e)} />

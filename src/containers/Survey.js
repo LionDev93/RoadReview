@@ -254,7 +254,7 @@ class Survey extends Component {
         'ui labeled icon violet basic massive button ' : 'ui labeled icon grey basic massive button disabled'}
         style={{ margin: '30px 35%' }}
         onClick={this.showPrev}>
-        <i class="arrow left icon"></i>
+        <i className="arrow left icon"></i>
         הקודם
       </button>
     ) : (

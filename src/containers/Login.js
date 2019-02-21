@@ -22,10 +22,11 @@ class Login extends Component {
   // ---> 1. FIREBASE DB <---
   login(e) {
     e.preventDefault();
+
     fireDB.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then((u) => {
     }).catch((e) => {
       this.showError(e);
-    });
+      });
   }
 
   // ---> 2. FIREBASE DB <---
@@ -38,6 +39,7 @@ class Login extends Component {
       })
   }
 
+  
   showError = (e) => {
     if (e.message === "There is no user record corresponding to this identifier. The user may have been deleted.") {
       this.setState({ error: "User with this email is not already signed up." });
@@ -60,13 +62,13 @@ class Login extends Component {
               <div className={`field ${this.state.redPass}`}>
                 <div className='ui fluid input'>
                   <input value={this.state.password} onChange={this.handleChange} type="password" name="password"
-                    style={{ textAlign: 'right' }} placeholder='Password' />
+                    style={{ textAlign: 'right' }} placeholder='Password' dir="rtl" />
                 </div>
               </div>
               <div className={`field ${this.state.redEmail}`}>
                 <div className='ui fluid input'>
                   <input value={this.state.email} onChange={this.handleChange} type="email" name="email"
-                    style={{ textAlign: 'right' }} placeholder='Email' maxLength='19' />
+                    style={{ textAlign: 'right' }} placeholder='Email' dir="rtl" />                  
                 </div>
               </div>
             </div>
