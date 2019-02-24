@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 
 import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
-import SimpleReactValidator from 'simple-react-validator';
 
 class NewForm extends Component {
 
@@ -14,8 +13,6 @@ class NewForm extends Component {
       answers: this.setNewFields(this.props.post),
       handleValidate: this.handleValidate.bind(this)
     }; // <- set up react state
-
-    this.validator = new SimpleReactValidator();
   }
 
   static defaultProps = {
@@ -28,10 +25,10 @@ class NewForm extends Component {
   }
 
   handleValidate() {
-    if (this.validator.allValid()) {
+    if (this.props.validator.allValid()) {
       return true;
     } else {
-      this.validator.showMessages();
+      this.props.validator.showMessages();
       this.forceUpdate();
 
       return false;
@@ -72,7 +69,6 @@ class NewForm extends Component {
     }
     return change;
   }
-
 
   isEmpty = (data) => {
     const { numericFields, textFields, arrayFields, checkFields } = this.props.constants;
@@ -185,14 +181,13 @@ class NewForm extends Component {
   }
 
   updatePostInDB = (data) => {
-
     if (this.isEmpty(data)) {
       const id = 'negative';
       this.showEl(id, () => document.getElementById(id).style.display = 'none');
     } else {
       data = this.processPlace(this.processCheck(data));
 
-      let headers = new Headers();
+      let headers = new Headers();      
       headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
       headers.set('Accept', 'application/json');
       headers.set('Content-Type', 'application/json');
@@ -204,7 +199,10 @@ class NewForm extends Component {
         method: 'POST',
         headers: headers,
         body: toDB
-      }).then(res => console.log('Status: ', res.status))
+      }).then(res => {
+          console.log('Status: ', res.status);
+          this.props.getDataItems();
+        })
         .catch(error => console.error('Error: ', error));
 
       this.showEl('success', () => { this.props.setNew(false) });
@@ -255,7 +253,8 @@ class NewForm extends Component {
             changeToFalse={this.changeToFalse}
             addToAnswer={this.addToAnswer}
             post={this.props.post}
-            validator={this.validator}
+            data={this.props.data}
+            validator={this.props.validator}
           />
 
         <div style={{
@@ -282,6 +281,5 @@ class NewForm extends Component {
     )
   }
 }
-
 
 export default NewForm;

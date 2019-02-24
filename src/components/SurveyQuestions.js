@@ -105,8 +105,7 @@ const SurveyQuestions = (props) => {
                     value3={answers.trivia1.wrong_answer1}
                     value4={answers.trivia1.wrong_answer2}
                     value5={answers.trivia1.wrong_answer3}
-                    validator={validator}
-                />                           
+                />
 
                 <TextArea
                     question={questions.EDIT_TEXT}
@@ -114,8 +113,7 @@ const SurveyQuestions = (props) => {
                     value={answers.story}
                     rows={'10'}
                 />
-                {validator.message('short story', answers.story, 'required')}
-                
+                                
                 <Question question={questions.PLACE} />
                 <MapContainer
                     handleAnswer={(place) => handleAnswerPlace(place)}
@@ -124,43 +122,39 @@ const SurveyQuestions = (props) => {
                     changed={props.changed}
                     changeToFalse={props.changeToFalse}
                     post={props.post}
+                    data={props.data}
                 />
-                {validator.message('google area', answers.place && answers.lat && answers.lon , 'required')}
+                {validator.message('google', answers.place && answers.lat && answers.lon , 'google')}
                
                 <ImgUploader
                     question={questions.PRE_IMG}
                     handleImgLoad={(newImg) => handleAnswerArray('question_images', newImg)}
                     answer={answers.question_images[answers.question_images.length - 1]} // to remember image 
                 />
-                {validator.message('asking img url', answers.question_images[answers.question_images.length - 1], 'required|url')}
                 
                 <ImgUploader
                     question={questions.POST_IMG}
                     handleImgLoad={(newImg) => handleAnswerArray('story_images', newImg)}
                     answer={answers.story_images[answers.story_images.length - 1]} // to remember image 
                 />
-                {validator.message('answering img url', answers.story_images[answers.story_images.length - 1], 'required|url')}
                 
                 <TextArea
                     question={questions.TITLE}
                     handleTextInput={(e) => handleAnswerArray('labels', e.target.value)}
                     value={answers.labels[answers.labels.length - 1]}
                 />                
-                {validator.message('question title/tags', answers.labels[answers.labels.length - 1], 'required')}
 
                 <Radio
                     question={questions.DIFFICULTY}
                     handleOptionChange={(e) => handleAnswer('difficulty', e)}
                     answer={answers.difficulty}
                 />
-                {validator.message('difficulty', answers.difficulty, 'required')}
 
                 <Radio
                     question={questions.INTERESTING}
                     handleOptionChange={(e) => handleAnswer('score', e)}
                     answer={answers.score}
                 />
-                {validator.message('score', answers.score, 'required')}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 30px', marginTop: "40px" }}>
                     <Checkbox question={questions.TOURISTS_REL} checked={answers.tourists_relevancy}
@@ -172,7 +166,6 @@ const SurveyQuestions = (props) => {
                     <Checkbox question={questions.SEE_ITEM} checked={answers.see_item}
                         handleCheck={(e) => handleCheck('see_item', e)} />
                 </div>
-
 
                 <SmallMessage name='success' text1='הטופס הושלם'
                     text2='התשובות נשמרו' />

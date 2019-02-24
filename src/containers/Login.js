@@ -38,8 +38,7 @@ class Login extends Component {
         this.showError(e);
       })
   }
-
-  
+ 
   showError = (e) => {
     if (e.message === "There is no user record corresponding to this identifier. The user may have been deleted.") {
       this.setState({ error: "User with this email is not already signed up." });

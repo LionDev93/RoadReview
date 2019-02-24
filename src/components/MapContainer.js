@@ -2,18 +2,19 @@
 import React from "react";
 import Autosuggest from './Autocomplete';
 import '../css/MapContainer.css';
-const _ = require("lodash");
-const { compose, withProps, lifecycle } = require("recompose");
-const {
+import _ from "lodash";
+import { compose, withProps, withStateHandlers, lifecycle } from "recompose";
+import {
   withScriptjs,
   withGoogleMap,
   GoogleMap,
-  Marker,
-} = require("react-google-maps");
-const { SearchBox } = require("react-google-maps/lib/components/places/SearchBox");
+  Marker
+} from "react-google-maps";
+import { InfoWindow } from "react-google-maps";
+import { SearchBox } from "react-google-maps/lib/components/places/SearchBox";
+import markerIcon from "../img/bluemapicon.png";
 
 const MapContainer = compose(
-
   withProps({
     googleMapURL: "https://maps.googleapis.com/maps/api/js?key=AIzaSyDSbOVMr0GAABOWMFiaUZJqjWrWu9p00fw&v=3&libraries=geometry,drawing,places",
     loadingElement: <div style={{ height: `100%` }} />,
@@ -24,9 +25,26 @@ const MapContainer = compose(
   lifecycle({
 
     componentWillMount() {
-      const refs = {}
+      let areas = [];
+      
+      {this.props.data.map((item, index) => {
+        if (item.labels.length <= 0 || ! item.lat || ! item.lon ||
+          areas.findIndex(area => area.place == item.place) > -1) {
+          return;
+        }
+        
+        let temp = {
+          lat: item.lat,
+          lon: item.lon,
+          place: item.place
+        };
+        
+        areas.push(temp);
+      })}
 
+      const refs = {}
       this.setState({
+        areas: areas,
         bounds: null,
         center: this.props.post.lat === undefined ? {lat: 39 , lng: 16} : {lat: parseFloat(this.props.post.lat) , lng: parseFloat(this.props.post.lon)},
         markers: [],
@@ -124,7 +142,23 @@ const MapContainer = compose(
         clickCustom:  () => {
           this.state.toggle('btnC',  'inputC', 'btnG', 'inputG');
         },
-
+        
+        getPlaceData: (place) => {
+          let items = [];
+          
+          this.props.data.map((item, index) => {
+              if (item.labels.length > 0 && item.place == place) {
+                items.push(<p style={{textAlign: "right"}} dir="rtl" key={`item${index}`}>{item.question}</p>)
+              }
+              return;
+          });
+          
+          if (items.length > 0) {
+            return items;
+          } else {
+            return "אין מידע";
+          }
+        }
 	    })
     },
     componentDidUpdate(){
@@ -145,26 +179,54 @@ const MapContainer = compose(
       }
     },
   }),
-
+  withStateHandlers(() => ({
+      showInfoIndex: -1
+    }), {
+    onShowInfo: ({showInfoIndex}) => (index) => ({
+      showInfoIndex: index
+    }),
+    onCloseInfo: ({showInfoIndex}) => () => ({
+      showInfoIndex: -1
+    })
+  }),
   withScriptjs,
   withGoogleMap
-)(props => <div className="mapController-item">
-
-
+)(props =>
+    <div className="mapController-item"> 
       <GoogleMap
         ref={props.onMapMounted}
         defaultZoom={15}
         center = {props.center}
+        onClick={() => {props.onCloseInfo()}}
       >
         {props.markers.map((marker, index) =>
-          <Marker 
-            key={index} 
-            position={marker.position} 
-            draggable={true}
-            onPositionChanged={props.onPositionChanged}
-            ref={props.onMarkerMounted}
-          />
+          <div key={`marker${index}`}>
+            <Marker
+              key={index}
+              position={marker.position} 
+              draggable={true}
+              onPositionChanged={props.onPositionChanged}
+              ref={props.onMarkerMounted}/>
+          </div>
         )}
+        {props.areas.map((area, index) => 
+          <Marker
+            key={index}
+            position={{ lat: area.lat, lng: area.lon}}
+            icon={markerIcon}
+            onClick={() => props.onShowInfo(index)}>
+            {props.showInfoIndex === index &&
+              <InfoWindow
+                onCloseClick={() => {props.onCloseInfo()}}
+                options={{ closeBoxURL: ``, enableEventPropagation: true }}
+              >
+                <div>
+                  {props.getPlaceData(area.place)}
+                </div>
+              </InfoWindow>
+            }
+          </Marker>
+        )}        
       </GoogleMap>
 
         <SearchBox

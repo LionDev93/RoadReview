@@ -7,13 +7,13 @@ const TriviaQuestion = ({numbers, question, handleTextInput, value1, value2, val
     let text = [<div key={1}>תשובה נכונה:</div>, <div key={2}>תשובות לא נכונות:</div>];
 
     return (
-        <div style={{marginTop: '20px'}}> 
+        <div style={{marginTop: '20px'}}>
             <Question question={question}/>
             <Input
                 number= {numbers[0]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                 placeholder='הנכס את השאלה' value={value1}
             />
-            {validator.message('number', value1, 'required')}
+
             <div style={{
                 display:'flex', 
                 justifyContent:'flex-end',
@@ -28,20 +28,15 @@ const TriviaQuestion = ({numbers, question, handleTextInput, value1, value2, val
                 }}> 
                     <Input key={1} number= {numbers[1]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה נכונה' value={value2}/>
-                    {validator.message('correct answer', value2, 'required')}
 
                     <Input key={2 }number= {numbers[2]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה לא נכונה' value={value3}/>
-                    {validator.message('incorrect answer1', value3, 'required')}
-                    
+                                        
                     <Input key={3 }number= {numbers[3]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה לא נכונה' value={value4}/>
-                    {validator.message('incorrect answer2', value4, 'required')}
-
+                    
                     <Input key={4} number= {numbers[4]} handleTextInput={(e, number) => handleTextInput(number, e)}
                         placeholder='הכנס כאן תשובה לא נכונה' value={value5}/>
-                    {validator.message('incorrect answer3', value5, 'required')}
-                    
                 </div>
                 <div style={{
                     display:'flex', 

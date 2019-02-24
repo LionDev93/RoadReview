@@ -13,6 +13,7 @@ import Survey from './Survey';
 import NewForm from './NewForm';
 import Login from './Login';
 import DataTable from './DataTable';
+import SimpleReactValidator from 'simple-react-validator';
 
 import '../css/Hidden.css';
 
@@ -30,7 +31,23 @@ class App extends Component {
       user: {},
       newItem: false,
       dbIsFull: false,
+      tableLoading: false,
     }; // <- set up react state
+
+    this.validator = new SimpleReactValidator({
+      validators: {
+        google: {  // name the rule
+          message: 'אנא הצמידו את האייטם למיקום במאגר שלנו או בגוגל',
+          rule: (val, params, validator) => {
+            return val ? true : false;
+          },
+          required: true
+        }
+      },
+      messages: {
+        required: 'יש למלא שדה זה'
+      }
+    });
   }
 
   setNew = (bool) => {
@@ -108,9 +125,9 @@ class App extends Component {
     }
   }
 
-  // ---> 3. GCP <---
-  componentDidMount() {
+  getDataItems = () => {
     this.authListener(); // <--- FIREBASE DB
+    this.setState({ tableLoading: true });
     let headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
     fetch('https://roadio-master.appspot.com/v1/get_places?limit=-1')
@@ -118,11 +135,16 @@ class App extends Component {
       .then(placeData => this.setState({ placesList: placeData }, () => {
         fetch('https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1', { method: 'GET', headers: headers, })
           .then(response => response.json())
-          .then(data => this.setState({ text: data.items }, () => {
+          .then(data => this.setState({ text: data.items, tableLoading: false }, () => {
+            console.log('data item set finish');
             this.setState({ dbIsFull: true });
           }));
       }));
+  }
 
+  // ---> 3. GCP <---
+  componentDidMount() {
+    this.getDataItems();
   }
 
   render() {
@@ -154,6 +176,9 @@ class App extends Component {
               post={{ place: null, lat: undefined, lon: undefined }}
               placesList={this.state.placesList}
               setNew={this.setNew}
+              data={this.state.text}
+              validator={this.validator}
+              getDataItems={this.getDataItems}
             />
           </Top>
 
@@ -166,7 +191,7 @@ class App extends Component {
         hideMessage = true;
         hideDiv = false;
       }
-
+      
       return (
         <div>
           <Router>
@@ -208,7 +233,7 @@ class App extends Component {
                     <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
                       text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
                     <div className={hideDiv ? 'hidden' : ''}>
-                      <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
+                      <Text text={0 ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
                     </div>
 
                     <Survey postNum={number}
@@ -220,6 +245,8 @@ class App extends Component {
                       user={submitted ? '' : user.email}
                       submitted={submitted}
                       placesList={this.state.placesList}
+                      validator={this.validator}
+                      data={this.state.text}
                     />
                   </Top>
                 );
@@ -230,13 +257,15 @@ class App extends Component {
                 return (
                   <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
                     <Redirect to={string} />
-                    <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
-                      text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
                     <div className={hideDiv ? 'hidden' : ''}>
                       <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
                     </div>
 
-                    <DataTable data={this.state.text}/>
+                    <DataTable
+                      user={user.email}
+                      data={this.state.text}
+                      tableLoading={this.state.tableLoading}
+                    />
                     
                     <Survey postNum={number}
                       showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}

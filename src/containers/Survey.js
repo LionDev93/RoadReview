@@ -267,6 +267,8 @@ class Survey extends Component {
             changeToFalse={this.changeToFalse}
             addToAnswer={this.addToAnswer}
             post={this.props.post}
+            validator={this.props.validator}
+            data={this.props.data}
           />
 
           <div style={{
