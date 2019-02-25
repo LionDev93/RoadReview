@@ -10,7 +10,7 @@ class Survey extends Component {
   constructor(props) {
     super(props);
 
-    console.log("SURVEY ANS: ", this.props.post);
+    // console.log("SURVEY ANS: ", this.props.post);
 
     this.state = {
       setNewFields: this.setNewFields.bind(this),
@@ -234,7 +234,7 @@ class Survey extends Component {
 
   //react lifecycle methods
   static getDerivedStateFromProps(props, state) {
-    console.log("DELIVER ANSWERS: ", state.answers);
+    // console.log("DELIVER ANSWERS: ", state.answers);
 
     if(state.answers.datastore_id !== props.post.datastore_id){
       return { answers: props.submitted ? '' : state.setNewFields(props.post), changedForMap: true};

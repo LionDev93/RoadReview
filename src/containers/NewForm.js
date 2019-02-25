@@ -243,7 +243,6 @@ class NewForm extends Component {
   moveToTop = () => document.getElementById("top").scrollIntoView(true);
 
   render() {
-
     return (
       <div>
           <SurveyQuestions

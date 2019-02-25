@@ -17,7 +17,6 @@ class DataTable extends Component {
   }
 
   componentDidMount() {
-    console.log(this.props.data);
     this.getFilterData();
   }
 

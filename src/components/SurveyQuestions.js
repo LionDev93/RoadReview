@@ -124,8 +124,9 @@ const SurveyQuestions = (props) => {
                     post={props.post}
                     data={props.data}
                 />
+
                 {validator.message('google', answers.place && answers.lat && answers.lon , 'google')}
-               
+                
                 <ImgUploader
                     question={questions.PRE_IMG}
                     handleImgLoad={(newImg) => handleAnswerArray('question_images', newImg)}

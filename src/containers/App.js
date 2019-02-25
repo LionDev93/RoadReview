@@ -47,7 +47,7 @@ class App extends Component {
       messages: {
         required: 'יש למלא שדה זה'
       }
-    });
+    });    
   }
 
   setNew = (bool) => {
@@ -234,8 +234,7 @@ class App extends Component {
                       text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
                     <div className={hideDiv ? 'hidden' : ''}>
                       <Text text={0 ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
-                    </div>
-
+                    </div>                    
                     <Survey postNum={number}
                       showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
                       numberOfPreviousElemnts={previosIndexList.length}
@@ -276,6 +275,8 @@ class App extends Component {
                       user={submitted ? '' : user.email}
                       submitted={submitted}
                       placesList={this.state.placesList}
+                      validator={this.validator}
+                      data={this.state.text}
                     />
                   </Top>
                 );
