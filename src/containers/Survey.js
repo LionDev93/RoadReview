@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
+import fetchStream from 'fetch-readablestream';
+import ErrorModal from '../components/ErrorModal';
 
 import '../css/Button.css';
 
@@ -18,6 +20,8 @@ class Survey extends Component {
       listWithPreviosAnswers: [],
       changed: false,
       changedForMap: false,
+      showModal: false,
+      errorMsg: ''
     }; // <- set up react state
   }
 
@@ -28,6 +32,27 @@ class Survey extends Component {
       arrayFields: ['labels', 'question_images', 'story_images'],
       checkFields: ['tourists_relevancy', 'night_item', 'see_item']
     },
+  }
+
+  handleCloseErrorMsg = () => {
+    this.setState({ showModal: false });
+  };
+
+  readAllChunks = (readableStream) => {
+    const reader = readableStream.getReader();
+    const chunks = [];
+   
+    function pump() {
+      return reader.read().then(({ value, done }) => {
+        if (done) {
+          return chunks;
+        }
+        chunks.push(value);
+        return pump();
+      });
+    }
+   
+    return pump();
   }
 
   setNewFields(change) {
@@ -117,22 +142,18 @@ class Survey extends Component {
     const { showEl } = this.props;
 
     e.preventDefault(); // <- prevent form submit from reloading the page
-    this.addToPreviousAnswers(answers);
-
-    document.getElementById("form").reset(); // <- clear the input
-    this.showNextItems(e, postNum);
-
+   
     let copy = Object.assign({}, answers);
     copy.submission_time = new Date().toLocaleString("en-US");
 
-    this.processTrivias(copy);  // <- process trivias and send to db
+    this.processTrivias(e, postNum, copy);  // <- process trivias and send to db
 
     showEl('success', 1000, true);
     this.setState({ preview: null, hanged: true, changedForMap: true });
 
   }
 
-  processTrivias = (answers) => {
+  processTrivias = (e, postNum, answers) => {
     let trivias = [answers.trivia1, answers.trivia2];
     delete answers.trivia1;
     delete answers.trivia2;
@@ -167,10 +188,10 @@ class Survey extends Component {
     }
 
     if (toDB.length === 0) {
-      this.updatePostInDB(answers);
+      this.updatePostInDB(e, postNum, answers);
     } else {
       for (let i in toDB) {
-        this.updatePostInDB(toDB[i]);
+        this.updatePostInDB(e, postNum, toDB[i]);
       }
     }
   }
@@ -185,7 +206,8 @@ class Survey extends Component {
     } return pushThere;
   }
 
-  updatePostInDB = (data) => {
+  updatePostInDB = (e, postNum, data) => {
+    const { answers, } = this.state;
     let headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
     headers.set('Accept', 'application/json');
@@ -194,12 +216,26 @@ class Survey extends Component {
     const toDB = JSON.stringify({ item: data });
     console.log("UPDATE: ", toDB);
 
-    fetch('https://roadio-master.appspot.com/v1/edit_item', {
+    fetchStream('https://roadio-master.appspot.com/v1/edit_item', {
       method: 'POST',
       headers: headers,
       body: toDB
-    }).then(res => console.log('Status: ', res.status))
-      .catch(error => console.error('Error: ', error));
+    })
+    .then(res => {
+      console.log('Status: ', res.status);
+      if (res.status === 500) {
+        this.setState({ showModal: true });
+        return this.readAllChunks(res.body);
+      }
+      this.addToPreviousAnswers(answers);
+
+      document.getElementById("form").reset(); // <- clear the input
+      this.showNextItems(e, postNum);
+    })
+    .then(chunks => {
+      chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
+    })
+    .catch(error => console.error('Error: ', error));
   }
 
   showNextItems = (e, postNum) => {
@@ -236,7 +272,7 @@ class Survey extends Component {
   static getDerivedStateFromProps(props, state) {
     // console.log("DELIVER ANSWERS: ", state.answers);
 
-    if(state.answers.datastore_id !== props.post.datastore_id){
+    if(state.answers && state.answers.datastore_id !== props.post.datastore_id){
       return { answers: props.submitted ? '' : state.setNewFields(props.post), changedForMap: true};
     }
     if (state.changed) {
@@ -248,10 +284,10 @@ class Survey extends Component {
 
     const { answers } = this.state;
     const { postNum, numberOfPreviousElemnts, submitted } = this.props;
-
+    
     return submitted ? (
       <button className={numberOfPreviousElemnts > 0 ?
-        'ui labeled icon violet basic massive button ' : 'ui labeled icon grey basic massive button disabled'}
+        'ui labeled icon violet basic massive button disabled' : 'ui labeled icon grey basic massive button disabled'}
         style={{ margin: '30px 35%' }}
         onClick={this.showPrev}>
         <i className="arrow left icon"></i>
@@ -271,12 +307,18 @@ class Survey extends Component {
             data={this.props.data}
           />
 
+          <ErrorModal
+            text={this.state.errorMsg}
+            showModal={this.state.showModal}
+            handleCloseModal={this.handleCloseErrorMsg}
+          />
+
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
           }}>
             <button className={numberOfPreviousElemnts > 0 ?
-              'ui labeled icon violet basic button ' : 'ui labeled icon grey basic button disabled'}
+              'ui labeled icon violet basic button' : 'ui labeled icon grey basic button'}
               style={{ margin: '30px' }}
               onClick={this.showPrev}>
               <i className="arrow left icon"></i>

@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 
 import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
-
+import ErrorModal from '../components/ErrorModal';
+import fetchStream from 'fetch-readablestream';
 class NewForm extends Component {
 
   constructor(props) {
@@ -11,7 +12,9 @@ class NewForm extends Component {
     this.state = {
       setNewFields: this.setNewFields.bind(this),
       answers: this.setNewFields(this.props.post),
-      handleValidate: this.handleValidate.bind(this)
+      handleValidate: this.handleValidate.bind(this),
+      showModal: false,
+      errorMsg: ''
     }; // <- set up react state
   }
 
@@ -150,6 +153,7 @@ class NewForm extends Component {
           newAn.answers = pushIfExist(newAn.answers, tr['wrong_answer1'], true);
           newAn.answers = pushIfExist(newAn.answers, tr['wrong_answer2'], true);
           newAn.answers = pushIfExist(newAn.answers, tr['wrong_answer3'], true);
+          //newAn.assigned_user = "weberr@outlook.com";
 
           if (sent)
             delete newAn.datastore_id;
@@ -179,6 +183,23 @@ class NewForm extends Component {
       }
     } return pushThere;
   }
+  
+  readAllChunks = (readableStream) => {
+    const reader = readableStream.getReader();
+    const chunks = [];
+   
+    function pump() {
+      return reader.read().then(({ value, done }) => {
+        if (done) {
+          return chunks;
+        }
+        chunks.push(value);
+        return pump();
+      });
+    }
+   
+    return pump();
+  }
 
   updatePostInDB = (data) => {
     if (this.isEmpty(data)) {
@@ -194,18 +215,25 @@ class NewForm extends Component {
 
       const toDB = JSON.stringify({ item: data });
       console.log("SAVE NEW ITEM: ", toDB);
-
-      fetch('https://roadio-master.appspot.com/v1/edit_item', {
+  
+      fetchStream('https://roadio-master.appspot.com/v1/edit_item', {
         method: 'POST',
         headers: headers,
         body: toDB
-      }).then(res => {
-          console.log('Status: ', res.status);
-          this.props.getDataItems();
-        })
-        .catch(error => console.error('Error: ', error));
-
-      this.showEl('success', () => { this.props.setNew(false) });
+      })
+      .then(res => {
+        console.log('Status: ', res.status);        
+        if (res.status === 500) {
+          this.setState({ showModal: true });
+          return this.readAllChunks(res.body);
+        }
+        this.props.getDataItems();
+        this.showEl('success', () => { this.props.setNew(false) });
+      })
+      .then(chunks => {        
+        chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
+      })
+      .catch(error => console.error('Error: ', error));
     }
   }
 
@@ -242,6 +270,10 @@ class NewForm extends Component {
 
   moveToTop = () => document.getElementById("top").scrollIntoView(true);
 
+  handleCloseErrorMsg = () => {
+    this.setState({ showModal: false });
+  };
+
   render() {
     return (
       <div>
@@ -255,7 +287,12 @@ class NewForm extends Component {
             data={this.props.data}
             validator={this.props.validator}
           />
-
+          <ErrorModal
+            text={this.state.errorMsg}
+            showModal={this.state.showModal}
+            handleCloseModal={this.handleCloseErrorMsg}
+          />
+          
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',

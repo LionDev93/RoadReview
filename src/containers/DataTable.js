@@ -25,16 +25,9 @@ class DataTable extends Component {
     this.getFilterData();
   }
 
-  getFilterData() {
-    let data = [];
-    if (!this.props.data) return;
-    this.props.data.map((item) => {
-      if (item.writer_username === this.props.user)
-        data.push(item);
-    });
-    
+  getFilterData() { 
     this.setState({
-      data,
+      data: this.props.data,
       editRow: null
     });
   }

@@ -16,6 +16,7 @@ import DataTable from './DataTable';
 import SimpleReactValidator from 'simple-react-validator';
 
 import '../css/Hidden.css';
+import MapContainer from '../components/MapContainer';
 
 class App extends Component {
 
@@ -24,6 +25,7 @@ class App extends Component {
     this.state = {
       post: 0,
       text: [],
+      userText: [],
       placesList: [],
       previosIndexList: [],
       previosIndex: undefined,
@@ -71,7 +73,7 @@ class App extends Component {
   showPrev = (e) => {
     e.preventDefault();
     this.hideEl('negative', true);
-    let temporaryList = this.state.previosIndexList;
+    let temporaryList = this.state.previosIndexList;    
     if (temporaryList.length > 0) {
       let previosElement = temporaryList.pop();
       this.setState({ post: previosElement, previosIndexList: temporaryList, previosDatascore_id: this.state.text[previosElement].datastore_id });
@@ -84,6 +86,8 @@ class App extends Component {
     let number = this.findNextUnsubmitedElement(post);
     if (number !== undefined) {
       temporaryList.push(post);
+      console.log("number: ", number);
+      console.log("post: ", post);
       this.setState({ post: number, previosIndexList: temporaryList });
     }
   }
@@ -97,9 +101,11 @@ class App extends Component {
 
   findNextUnsubmitedElement = (post) => {
     const { text } = this.state;
+
     for (let i = post + 1, size = Object.values(text).length; i < size; i++) {
       if ((text[i].assigned_user === this.state.user.email)
-        && text[i].submission_time === null) {
+         && text[i].submission_time === null) {
+        console.log("###assigned-ok: ", i);
         return i;
       }
     }
@@ -125,6 +131,17 @@ class App extends Component {
     }
   }
 
+  getUserDataItems = () => {
+    let data = [];
+    
+    this.state.text && this.state.text.map((item) => {
+      if (this.state.user && item.writer_username === this.state.user.email)
+        data.push(item);
+    });
+
+    this.setState({ userText: data });
+  }
+
   getDataItems = () => {
     this.authListener(); // <--- FIREBASE DB
     this.setState({ tableLoading: true });
@@ -136,7 +153,8 @@ class App extends Component {
         fetch('https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1', { method: 'GET', headers: headers, })
           .then(response => response.json())
           .then(data => this.setState({ text: data.items, tableLoading: false }, () => {
-            console.log('data item set finish');
+            // console.log('data item set finish');
+            this.getUserDataItems();
             this.setState({ dbIsFull: true });
           }));
       }));
@@ -227,14 +245,16 @@ class App extends Component {
 
                 }
                 isNextElementExist = this.findNextUnsubmitedElement(number) !== undefined;
+                if(!hideMessage) string = "/";
                 return (
                   <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
                     <Redirect to={string} />
-                    <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
-                      text1='מצטערים' text2='כל הפוסטים כבר נבדקו' />
+                    {/* <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
+                      text1='מצטערים' text2='כל הפוסטים כבר נבדקו' /> */}
                     <div className={hideDiv ? 'hidden' : ''}>
-                      <Text text={0 ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
-                    </div>                    
+                      <Text text={text[number] && text[number].raw_text && !hideDiv ? text[number].raw_text : '' } heading={hideDiv ? '' : text[number].place} />
+                    </div>
+                   
                     <Survey postNum={number}
                       showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
                       numberOfPreviousElemnts={previosIndexList.length}
@@ -252,20 +272,24 @@ class App extends Component {
               }} />
               <Route path={"/"} exact render={() => {
                 let string = "/" + (text[number] === undefined ? "" : text[number].datastore_id);
-
+                         
                 return (
                   <Top user={user.email} itemId={itemId} setNew={() => this.setNew(true)} >
                     <Redirect to={string} />
                     <div className={hideDiv ? 'hidden' : ''}>
-                      <Text text={hideDiv ? '' : text[number].raw_text} heading={hideDiv ? '' : text[number].place} />
+                      <Text text={text[number] && text[number].raw_text && !hideDiv ? text[number].raw_text : '' } heading={hideDiv ? '' : text[number].place} />
                     </div>
 
                     <DataTable
-                      user={user.email}
-                      data={this.state.text}
+                      data={this.state.userText}
                       tableLoading={this.state.tableLoading}
                     />
-                    
+
+                    <MapContainer
+                      data={this.state.userText}
+                      isFormMap={false}
+                    />
+
                     <Survey postNum={number}
                       showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
                       numberOfPreviousElemnts={previosIndexList.length}
@@ -288,7 +312,11 @@ class App extends Component {
     }
     else {
       return (
-        <Login showEl={this.showEl} hideEl={this.hideEl} />
+        <Login
+          showEl={this.showEl}
+          hideEl={this.hideEl}
+          getDataItems={() => this.getDataItems()}
+        />
       )
     }
   }

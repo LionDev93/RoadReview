@@ -24,6 +24,7 @@ class Login extends Component {
     e.preventDefault();
 
     fireDB.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then((u) => {
+      this.props.getDataItems();
     }).catch((e) => {
       this.showError(e);
       });
@@ -33,6 +34,7 @@ class Login extends Component {
   signup(e) {
     e.preventDefault();
     fireDB.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then((u) => {
+      this.props.getDataItems();
     }).then((u) => { console.log(u) })
       .catch((e) => {
         this.showError(e);

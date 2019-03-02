@@ -18,6 +18,8 @@ const SurveyQuestions = (props) => {
         questions: {
             PLACE: 'מיקום קשור',
             TITLE: 'כותרת שאלה / תגיות',
+            IS_GROUP: 'קבוצתי',
+            GROUPS: 'מקבצים',
             PRE_IMG: 'תמונה בזמן שאלה',
             POST_IMG: 'תמונה בזמן תשובה',
             DIFFICULTY: 'רמת קושי שאלה',
@@ -45,9 +47,11 @@ const SurveyQuestions = (props) => {
     }
 
     const handleAnswerArray = (question, element) => {
-        let size = answers[question].length;
-        if (size === 0)
+        let size = answers[question] ? answers[question].length : 0;
+        if (size === 0) {
+            answers[question] = [];
             size++;
+        }
         answers[question][size - 1] = element;
         props.addToAnswer(answers);
     }
@@ -117,14 +121,18 @@ const SurveyQuestions = (props) => {
                 <Question question={questions.PLACE} />
                 <MapContainer
                     handleAnswer={(place) => handleAnswerPlace(place)}
+                    handleCheck={(e) => handleCheck('is_group', e)}
+                    checkQuestion={questions.IS_GROUP}
+                    checked={answers.is_group}
                     placesList={props.placesList}
                     answer={answers.place}
                     changed={props.changed}
                     changeToFalse={props.changeToFalse}
                     post={props.post}
                     data={props.data}
+                    isFormMap={true}
+                    showCurrentMarker
                 />
-
                 {validator.message('google', answers.place && answers.lat && answers.lon , 'google')}
                 
                 <ImgUploader
@@ -143,7 +151,13 @@ const SurveyQuestions = (props) => {
                     question={questions.TITLE}
                     handleTextInput={(e) => handleAnswerArray('labels', e.target.value)}
                     value={answers.labels[answers.labels.length - 1]}
-                />                
+                />
+                
+                <TextArea
+                    question={questions.GROUPS}
+                    handleTextInput={(e) => handleAnswerArray('groups', e.target.value)}
+                    value={answers.groups ? answers.groups[answers.groups.length - 1] : ''}
+                />
 
                 <Radio
                     question={questions.DIFFICULTY}

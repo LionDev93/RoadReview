@@ -13,42 +13,39 @@ import {
 import { InfoWindow } from "react-google-maps";
 import { SearchBox } from "react-google-maps/lib/components/places/SearchBox";
 import markerIcon from "../img/bluemapicon.png";
+import Checkbox from './Checkbox';
+
+let defaultLat = 36;
+let defaultLon = 32;
+
+const mapStyle = {
+  margin: `20px 10px 30px 10px`,
+  width: `100%`
+};
 
 const MapContainer = compose(
   withProps({
     googleMapURL: "https://maps.googleapis.com/maps/api/js?key=AIzaSyDSbOVMr0GAABOWMFiaUZJqjWrWu9p00fw&v=3&libraries=geometry,drawing,places",
     loadingElement: <div style={{ height: `100%` }} />,
     containerElement: <div className="mainContainer" style={{ height: `400px` }} />,
-    mapElement: <div className="map-item" style={{ height: `100%`, margin: '0px 30px' }} />
+    mapElement: <div className="map-item" style={{...mapStyle}} />
   }),
 
   lifecycle({
 
     componentWillMount() {
-      let areas = [];
+      this.getQuestionMarkers();
       
-      {this.props.data.map((item, index) => {
-        if (item.labels.length <= 0 || ! item.lat || ! item.lon ||
-          areas.findIndex(area => area.place == item.place) > -1) {
-          return;
-        }
-        
-        let temp = {
-          lat: item.lat,
-          lon: item.lon,
-          place: item.place
-        };
-        
-        areas.push(temp);
-      })}
-
       const refs = {}
-      this.setState({
-        areas: areas,
-        bounds: null,
+      const formState = this.props.isFormMap ? {
         center: this.props.post.lat === undefined ? {lat: 39 , lng: 16} : {lat: parseFloat(this.props.post.lat) , lng: parseFloat(this.props.post.lon)},
-        markers: [],
         currentPlace: this.props.post.place === null ? { place_name: null, lat: undefined, lon: undefined} : {place_name: this.props.post.place, lat: this.props.post.lat, lon: this.props.post.lon},
+      } : null;
+
+      this.setState({
+        ...formState,        
+        bounds: null,
+        markers: [],
         editedChecker: true,
         writeGoogleCurrentPlace: (googlePlace) => {
           let newPlace = {
@@ -60,9 +57,13 @@ const MapContainer = compose(
         },
         onMapMounted: ref => {
           refs.map = ref;
-          console.log("test map");
           let newmarker = {};
-          newmarker.position = new google.maps.LatLng(parseFloat(this.props.post.lat), parseFloat(this.props.post.lon));
+          if (this.props.isFormMap) {
+            newmarker.position = new google.maps.LatLng(parseFloat(this.props.post.lat), parseFloat(this.props.post.lon));
+          } else {
+            newmarker.position = new google.maps.LatLng(parseFloat(defaultLat), parseFloat(defaultLon));
+          }
+
           let markers = [newmarker];      
           this.setState({markers}); 
         },
@@ -161,9 +162,13 @@ const MapContainer = compose(
         }
 	    })
     },
-    componentDidUpdate(){
+    componentDidUpdate(prevProps){
+      console.log("update passed!");
+      if (this.props === prevProps) return;
+      console.log("update prev passed!");
+      this.getQuestionMarkers();
       // console.log(this.props.placesList);
-      if(this.props.changed){
+      if(this.props.isFormMap && this.props.changed){
         let lat = parseFloat(this.props.post.lat);
         let lng = parseFloat(this.props.post.lon);
         if(lat != undefined){
@@ -172,12 +177,35 @@ const MapContainer = compose(
           newmarker.position = new google.maps.LatLng(parseFloat(this.props.post.lat), parseFloat(this.props.post.lon));
           let markers = [newmarker];
           this.setState({center: newCentr, markers: markers, currentPlace: {place_name: this.props.post.place, lat: this.props.post.lat, lon: this.props.post.lon}});
+          console.log("updateMap:", newCentr);
         }
         else{
           this.setState({markers: [], currentPlace: { place_name: null, lat: undefined, lon: undefined}});
         }
       }
     },
+    componentWillReceiveProps(nextProps) {
+      console.log("recev passed!");
+      if (this.props.data === nextProps.data) return;
+
+    },
+    getQuestionMarkers() {
+      let questionMarkers = [];
+      
+      this.props.data.map((item, index) => {
+        if (item.labels.length <= 0 || ! item.lat || ! item.lon ||
+          questionMarkers.findIndex(marker => marker.place == item.place) > -1) {
+          return;
+        }
+        if (questionMarkers.length == 1) {
+          defaultLat = questionMarkers[0].lat;
+          defaultLon = questionMarkers[0].lon;
+        }
+        questionMarkers.push({...item});
+      });
+
+      this.setState({ questionMarkers });
+    }
   }),
   withStateHandlers(() => ({
       showInfoIndex: -1
@@ -192,14 +220,15 @@ const MapContainer = compose(
   withScriptjs,
   withGoogleMap
 )(props =>
-    <div className="mapController-item"> 
+    <div className="mapController-item">
       <GoogleMap
         ref={props.onMapMounted}
-        defaultZoom={15}
-        center = {props.center}
+        defaultZoom={props.isFormMap ? 15 : 6}
+        center={props.isFormMap ? props.center : {lat: defaultLat , lng: defaultLon}}
         onClick={() => {props.onCloseInfo()}}
+        defaultCenter={{ lat: 36, lng: 32 }}
       >
-        {props.markers.map((marker, index) =>
+        {props.showCurrentMarker && props.markers.map((marker, index) =>
           <div key={`marker${index}`}>
             <Marker
               key={index}
@@ -209,10 +238,10 @@ const MapContainer = compose(
               ref={props.onMarkerMounted}/>
           </div>
         )}
-        {props.areas.map((area, index) => 
+        {props.questionMarkers.map((marker, index) => 
           <Marker
             key={index}
-            position={{ lat: area.lat, lng: area.lon}}
+            position={{ lat: marker.lat, lng: marker.lon}}
             icon={markerIcon}
             onClick={() => props.onShowInfo(index)}>
             {props.showInfoIndex === index &&
@@ -221,56 +250,61 @@ const MapContainer = compose(
                 options={{ closeBoxURL: ``, enableEventPropagation: true }}
               >
                 <div>
-                  {props.getPlaceData(area.place)}
+                  {props.getPlaceData(marker.place)}
                 </div>
               </InfoWindow>
             }
           </Marker>
         )}        
       </GoogleMap>
+      {props.isFormMap && (
+        <div>
+          <SearchBox
+            ref={props.onSearchBoxMounted}
+            bounds={props.bounds}
+            controlPosition={ google.maps.ControlPosition.TOP_LEFT }
+            onPlacesChanged={props.onPlacesChanged}
+          >
+            <input
+              id='inputG'
+              type="text"
+              placeholder="חפש שם מקום בגוגל"
+              style={{
+                boxSizing: `border-box`,
+                border: `1px solid transparent`,
+                width: `240px`,
+                height: `32px`,
+                marginTop: `27px`,
+                padding: `0 12px`,
+                borderRadius: `3px`,
+                boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
+                fontSize: `14px`,
+                outline: `none`,
+                textOverflow: `ellipses`,
+                display: 'none',
+              }}
+            />
+          </SearchBox>
+          <div className="ui buttons" style={{ display: 'flex', justifyContent: 'center', 
+            margin: '20px 30px 20px 20px' }}>
+            <div className="ui button active" id='btnG' onClick={props.clickGoogle} > Google </div >
+            <div className="or"></div>
+            <div  className="ui button violet" id='btnC' onClick={props.clickCustom} > מאגר פנימי </div >
+          </div>
 
-        <SearchBox
-          ref={props.onSearchBoxMounted}
-          bounds={props.bounds}
-          controlPosition={ google.maps.ControlPosition.TOP_LEFT }
-          onPlacesChanged={props.onPlacesChanged}
-        >
-          <input
-            id='inputG'
-            type="text"
-            placeholder="חפש שם מקום בגוגל"
-            style={{
-              boxSizing: `border-box`,
-              border: `1px solid transparent`,
-              width: `240px`,
-              height: `32px`,
-              marginTop: `27px`,
-              padding: `0 12px`,
-              borderRadius: `3px`,
-              boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
-              fontSize: `14px`,
-              outline: `none`,
-              textOverflow: `ellipses`,
-              display: 'none',
-            }}
-          />
-        </SearchBox>
-        <div className="ui buttons" style={{ display: 'flex', justifyContent: 'center', 
-          margin: '20px 30px 20px 20px' }}>
-          <div className="ui button active" id='btnG' onClick={props.clickGoogle} > Google </div >
-          <div className="or"></div>
-          <div  className="ui button violet" id='btnC' onClick={props.clickCustom} > מאגר פנימי </div >
+          <div id='inputC' >
+            <Autosuggest 
+            placesList = {props.placesList}
+            onPlacesChangedAutoCompleate={props.onPlacesChangedAutoCompleate}
+            answer={props.answer}
+            changed={props.changed}
+            changeToFalse={props.changeToFalse}
+            />
+          </div>
+          <Checkbox question={props.checkQuestion} checked={props.checked}
+              handleCheck={(e) => props.handleCheck(e)} />
         </div>
-
-        <div id='inputC' >
-          <Autosuggest 
-          placesList = {props.placesList}
-          onPlacesChangedAutoCompleate={props.onPlacesChangedAutoCompleate}
-          answer={props.answer}
-          changed={props.changed}
-          changeToFalse={props.changeToFalse}
-          />
-        </div>
+      )}
   </div>);
 
 export default MapContainer;

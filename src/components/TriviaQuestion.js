@@ -29,10 +29,10 @@ const TriviaQuestion = ({numbers, question, handleTextInput, value1, value2, val
                     <Input key={1} number= {numbers[1]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה נכונה' value={value2}/>
 
-                    <Input key={2 }number= {numbers[2]} handleTextInput={(e, number) => handleTextInput(number, e)} 
+                    <Input key={2}number= {numbers[2]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה לא נכונה' value={value3}/>
                                         
-                    <Input key={3 }number= {numbers[3]} handleTextInput={(e, number) => handleTextInput(number, e)} 
+                    <Input key={3}number= {numbers[3]} handleTextInput={(e, number) => handleTextInput(number, e)} 
                         placeholder='הכנס כאן תשובה לא נכונה' value={value4}/>
                     
                     <Input key={4} number= {numbers[4]} handleTextInput={(e, number) => handleTextInput(number, e)}
