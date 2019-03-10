@@ -82,6 +82,7 @@ const SurveyQuestions = (props) => {
         answers.place = currentPlace.place_name;
         answers.lon = currentPlace.lon;
         answers.lat = currentPlace.lat;
+        answers.coords = currentPlace.coords;
         props.addToAnswer(answers);
     }
 
