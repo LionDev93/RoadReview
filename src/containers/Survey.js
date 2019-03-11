@@ -28,8 +28,8 @@ class Survey extends Component {
   static defaultProps = {
     constants: {
       numericFields: ['difficulty', 'score'],
-      textFields: ['place', 'lon', 'lat', 'story'],
-      arrayFields: ['labels', 'question_images', 'story_images'],
+      textFields: ['place', 'story'],
+      arrayFields: ['labels', 'question_images', 'story_images', 'coords'],
       checkFields: ['tourists_relevancy', 'night_item', 'see_item']
     },
   }

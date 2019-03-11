@@ -65,6 +65,8 @@ const MapContainer = compose(
         ...formState,
         bounds: null,
         markers: [],
+        placeName: "",
+        editedFromDB: false,
         editedChecker: true,
         writeGoogleCurrentPlace: googlePlace => {
           let newPlace = {
@@ -100,12 +102,13 @@ const MapContainer = compose(
         },
 
         updatePlaces: () => {
+          console.log("f updatePlaces");
           let editedPlace = Object.assign({}, this.state.currentPlace);
           editedPlace.place_name =
             editedPlace.place_name.startsWith("_edited") ||
-            !this.state.editedChecker
-              ? editedPlace.place_name
-              : "_edited" + editedPlace.place_name;
+            this.state.editedFromDB
+              ? ("_edited" + this.state.placeName)
+              : this.state.placeName;
           const position = refs.marker.getPosition();
           let lat = position.lat().toString();
           let lng = position.lng().toString();
@@ -115,7 +118,6 @@ const MapContainer = compose(
             marker.position.lat(),
             marker.position.lng()
           ]);
-          console.log("place_name1: " + editedPlace.place_name);
           this.props.handleAnswer(editedPlace);
           return editedPlace;
         },
@@ -132,14 +134,24 @@ const MapContainer = compose(
           refs.searchBox = ref;
         },
 
+        // Location from map
         onPlacesChanged: () => {
+          this.setState({
+            editedFromDB: false
+          });
+          console.log("f onPlacesChanged");
           const places = refs.searchBox.getPlaces();
           const bounds = new google.maps.LatLngBounds();
           places.forEach(place => {
-            // this.setState({
-            //   ...this.state.currentPlace,
-            //   place_name: place.name
-            // });
+            this.setState({
+              currentPlace: {
+                ...this.state.currentPlace,
+                place_name: place.name
+              }
+            });
+            this.setState({
+              placeName: place.name
+            });
             this.state.writeGoogleCurrentPlace(place);
             if (place.geometry.viewport) {
               bounds.union(place.geometry.viewport);
@@ -159,7 +171,10 @@ const MapContainer = compose(
           refs.map.fitBounds(bounds);
           console.log("place_name2: " + this.state.currentPlace.place_name);
           this.props.handleAnswer({
-            place: this.state.currentPlace.place_name,
+            place_name:
+              this.state.placeName.length > 0
+                ? this.state.placeName
+                : this.state.currentPlace.place_name,
             coords: this.state.markers.map(marker => [
               marker.position.lat(),
               marker.position.lng()
@@ -168,22 +183,24 @@ const MapContainer = compose(
           console.log(this);
         },
 
+        // Location from database
         onPlacesChangedAutoCompleate: (newmarkers, newPlace) => {
-          console.log("place_name3: " + this.state.currentPlace.place_name);
+          console.log("f onPlacesChangedAutoCompleate");
+          this.setState({
+            editedFromDB: true
+          });
           let newcenter = newmarkers[0].position;
           this.setState(
             {
-              currentPlace: {
-                ...newPlace,
-                place_name: this.state.currentPlace.place_name
-              },
+              currentPlace: newPlace,
               center: newcenter,
               markers: newmarkers,
-              editedChecker: true
+              editedChecker: true,
+              placeName: newPlace.place_name
             },
             () => {
               this.props.handleAnswer({
-                place: this.state.currentPlace.place_name,
+                place_name: this.state.currentPlace.place_name,
                 coords: this.state.markers.map(marker => [
                   marker.position.lat(),
                   marker.position.lng()
@@ -233,23 +250,30 @@ const MapContainer = compose(
           }
         },
         handleAddMarkerClick: () => {
-          console.log(this.state.markers);
-          console.log(this.state.center);
-          this.setState({
-            markers: this.state.markers.concat([
-              {
-                position: new google.maps.LatLng(
-                  parseFloat(refs.map.getCenter().lat()),
-                  parseFloat(refs.map.getCenter().lng())
-                )
-              }
-            ])
-          });
+          console.log("f handleAddMarkerClick");
+          this.state.markers = [
+            ...this.state.markers,
+            {
+              position: new google.maps.LatLng(
+                parseFloat(refs.map.getCenter().lat()),
+                parseFloat(refs.map.getCenter().lng())
+              )
+            }
+          ];
+          this.state.updateMarkersInAnswers();
         },
         removeMarker: index => {
-          console.log("index: " + index);
-          this.setState({
-            markers: this.state.markers.filter((elem, i) => i !== index)
+          this.state.markers = this.state.markers.filter(
+            (elem, i) => i !== index
+          );
+          this.state.updateMarkersInAnswers();
+        },
+        updateMarkersInAnswers: () => {
+          this.props.handleAnswer({
+            coords: this.state.markers.map(marker => [
+              marker.position.lat(),
+              marker.position.lng()
+            ])
           });
         },
         handleInputChange: event => {
@@ -258,11 +282,11 @@ const MapContainer = compose(
             target.type === "checkbox" ? target.checked : target.value;
           const name = target.name;
           this.setState({
-            currentPlace: {
-              ...this.state.currentPlace,
-              place_name: value
-            }
+            [name]: value
           });
+          if (name === "placeName") {
+            this.props.handleAnswer({ place_name: value });
+          }
         }
       });
     },
@@ -460,20 +484,20 @@ const MapContainer = compose(
           />
         </div>
         {/*Place name from Google maps*/}
-        {props.currentPlace.place_name.length > 0 && (
+        {props.placeName.length > 0 && !props.editedFromDB && (
           <Input
             onChange={props.handleInputChange}
             name={"placeName"}
-            value={props.currentPlace.place_name}
+            value={props.placeName}
             style={{ marginTop: "4px" }}
           />
         )}
         {/*List of markers*/}
         {props.markers.map((marker, index) => (
           <p key={`marker${index}`}>
-            {index} : Lat {marker.position.lat()} Lng {marker.position.lng()}{" "}
+            {`Pointer ${index}`}{" "}
             {props.markers.length > 1 && (
-              <Icon onClick={() => props.removeMarker(index)} name={"trash"} />
+              <Icon style={{cursor: "pointer"}} onClick={() => props.removeMarker(index)} name={"trash"} />
             )}
           </p>
         ))}

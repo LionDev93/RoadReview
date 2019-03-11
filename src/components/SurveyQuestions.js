@@ -79,10 +79,10 @@ const SurveyQuestions = (props) => {
     }
 
     const handleAnswerPlace = (currentPlace) => {
-        answers.place = currentPlace.place_name;
-        answers.lon = currentPlace.lon;
-        answers.lat = currentPlace.lat;
-        answers.coords = currentPlace.coords;
+        if (currentPlace.place_name) answers.place = currentPlace.place_name;
+        // answers.lon = currentPlace.lon;
+        // answers.lat = currentPlace.lat;
+        if (currentPlace.coords) answers.coords = currentPlace.coords;
         props.addToAnswer(answers);
     }
 
@@ -134,7 +134,7 @@ const SurveyQuestions = (props) => {
                     isFormMap={true}
                     showCurrentMarker
                 />
-                {validator.message('google', answers.place && answers.lat && answers.lon , 'google')}
+                {validator.message('google', answers.place && answers.coords && answers.coords.length > 0 , 'google')}
                 
                 <ImgUploader
                     question={questions.PRE_IMG}
