@@ -70,6 +70,7 @@ const MapContainer = compose(
         editedChecker: true,
         locationFromDB: false,
         updatedFromPost: false,
+        nameWasModified: false,
         writeGoogleCurrentPlace: googlePlace => {
           let newPlace = {
             lat: googlePlace.geometry.location.lat().toString(),
@@ -108,19 +109,19 @@ const MapContainer = compose(
           console.log("f updatePlaces");
           let editedPlace = Object.assign({}, this.state.currentPlace);
           console.log("is new form: " + this.props.isNewForm);
-          let place_name = "";
-          if (this.props.isNewForm && this.state.locationFromDB) {
-            place_name = editedPlace.place_name.startsWith("_edited")
-              ? editedPlace.place_name
-              : "_edited" + editedPlace.place_name;
-            console.log("p_n: " + place_name);
-          }
-          if (!this.props.isNewForm && !this.state.locationFromDB) {
-            place_name = this.state.placeName;
-          }
-          if (this.props.isEditor) {
-            place_name = this.state.currentPlace.place_name;
-          }
+          let place_name = this.state.placeName;
+          // if (this.props.isNewForm && this.state.locationFromDB) {
+          //   place_name = editedPlace.place_name.startsWith("_edited")
+          //     ? editedPlace.place_name
+          //     : "_edited" + editedPlace.place_name;
+          //   console.log("p_n: " + place_name);
+          // }
+          // if (!this.props.isNewForm && !this.state.locationFromDB) {
+          //   place_name = this.state.placeName;
+          // }
+          // if (this.props.isEditor) {
+          //   place_name = this.state.currentPlace.place_name;
+          // }
           // editedPlace.place_name =
           //   editedPlace.place_name.startsWith("_edited") ||
           //   this.state.editedFromDB
@@ -256,11 +257,13 @@ const MapContainer = compose(
           document.getElementById(activeBtn).className = "ui button violet";
           document.getElementById(greyBtn).className = "ui button active";
           document.getElementById(fieldToShow).style.display = "block";
-          document.getElementById(fieldToHide).style.display = "none";
+          // document.getElementById(fieldToHide).style.display = "none";
         },
 
         clickGoogle: () => {
-          this.state.toggle("btnG", "inputG", "btnC", "inputC");
+          // this.state.toggle("btnG", "inputG", "btnC", "findLocationBtn");
+          document.getElementById("findLocationBtn").style.display = "none";
+          document.getElementById("inputG").style.display = "block";
         },
 
         clickCustom: () => {
@@ -321,25 +324,33 @@ const MapContainer = compose(
         },
         updateMapFromPost: () => {
           let getPosition = (lat, lng) => {
-            return new google.maps.LatLng(
-                parseFloat(lat),
-                parseFloat(lng)
-            )
+            return new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
           };
-          if (this.props.isNewForm !== undefined && !this.props.isNewForm && !this.state.updatedFromPost) {
+          if (
+            this.props.isNewForm !== undefined &&
+            !this.props.isNewForm &&
+            !this.state.updatedFromPost
+          ) {
             this.setState({
               updatedFromPost: true,
               locationFromDB: true
             });
-            if (this.props.post && this.props.post.coords && this.props.post.coords.length > 0) {
+            if (
+              this.props.post &&
+              this.props.post.coords &&
+              this.props.post.coords.length > 0
+            ) {
               this.setState({
                 markers: this.props.post.coords.map(place => {
-                  console.log(place);
                   return {
-                    position: getPosition(parseFloat(place[0]), parseFloat(place[1])),
+                    position: getPosition(
+                      parseFloat(place[0]),
+                      parseFloat(place[1])
+                    ),
                     ref: React.createRef()
                   };
-                })
+                }),
+                placeName: this.props.post.place
               });
             }
           }
@@ -354,6 +365,9 @@ const MapContainer = compose(
           });
           if (name === "placeName") {
             this.props.handleAnswer({ place_name: value });
+            this.setState({
+              nameWasModified: true
+            })
           }
         }
       });
@@ -470,8 +484,7 @@ const MapContainer = compose(
             </div>
           );
         })}
-      {false &&
-        props.questionMarkers.map((marker, index) => (
+      {props.questionMarkers.map((marker, index) => (
           <Marker
             key={index}
             position={{ lat: marker.lat, lng: marker.lon }}
@@ -493,114 +506,120 @@ const MapContainer = compose(
     </GoogleMap>
     {props.updateMapFromPost()}
     {props.isFormMap && (
-      <div style={{ minWidth: "20vw" }}>
-        <SearchBox
-          ref={props.onSearchBoxMounted}
-          bounds={props.bounds}
-          controlPosition={google.maps.ControlPosition.TOP_LEFT}
-          onPlacesChanged={props.onPlacesChanged}
-        >
-          <input
-            id="inputG"
-            type="text"
-            placeholder="חפש שם מקום בגוגל"
+      <div>
+        <div style={{ minWidth: "20vw", minHeight: "340px", textAlign: "right" }}>
+          <SearchBox
+            ref={props.onSearchBoxMounted}
+            bounds={props.bounds}
+            controlPosition={google.maps.ControlPosition.TOP_LEFT}
+            onPlacesChanged={props.onPlacesChanged}
+          >
+            <input
+              id="inputG"
+              type="text"
+              placeholder="חפש שם מקום בגוגל"
+              style={{
+                boxSizing: `border-box`,
+                border: `1px solid transparent`,
+                width: `240px`,
+                height: `32px`,
+                marginTop: `27px`,
+                padding: `0 12px`,
+                borderRadius: `3px`,
+                boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
+                fontSize: `14px`,
+                outline: `none`,
+                textOverflow: `ellipses`,
+                display: "none"
+              }}
+            />
+          </SearchBox>
+          <div
+            className="ui buttons"
             style={{
-              boxSizing: `border-box`,
-              border: `1px solid transparent`,
-              width: `240px`,
-              height: `32px`,
-              marginTop: `27px`,
-              padding: `0 12px`,
-              borderRadius: `3px`,
-              boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
-              fontSize: `14px`,
-              outline: `none`,
-              textOverflow: `ellipses`,
-              display: "none"
+              display: "none",
+              justifyContent: "center",
+              margin: "20px 30px 20px 20px"
             }}
-          />
-        </SearchBox>
-        <div
-          className="ui buttons"
-          style={{
-            display: "none",
-            justifyContent: "center",
-            margin: "20px 30px 20px 20px"
-          }}
-        >
-          <div
-            className="ui button active"
-            id="btnG"
-            onClick={props.clickGoogle}
           >
-            {" "}
-            Google{" "}
-          </div>
-          <div className="or" />
-          <div
-            className="ui button violet"
-            id="btnC"
-            onClick={props.clickCustom}
-          >
-            {" "}
-            מאגר פנימי{" "}
-          </div>
-        </div>
-
-        <div id="inputC" style={{ minWidth: "20vw" }}>
-          <Autosuggest
-            placesList={props.placesList}
-            onPlacesChangedAutoCompleate={props.onPlacesChangedAutoCompleate}
-            answer={props.answer}
-            changed={props.changed}
-            changeToFalse={props.changeToFalse}
-            clickGoogle={props.clickGoogle}
-            locationFromDB={props.locationFromDB}
-            isNewForm={props.isNewForm}
-          />
-        </div>
-        {/*Place name from Google maps*/}
-        {props.placeName.length > 0 && !props.editedFromDB && (
-          <Input
-            onChange={props.handleInputChange}
-            name={"placeName"}
-            value={props.placeName}
-            style={{ marginTop: "4px" }}
-          />
-        )}
-        {/*List of markers*/}
-        {props.markers.map((marker, index) => (
-          <p key={`marker${index}`}>
-            {`Pointer ${index}`}{" "}
-            {props.markers.length > 1 && (
-              <Icon
-                style={{ cursor: "pointer" }}
-                onClick={() => props.removeMarker(index)}
-                name={"trash"}
-              />
-            )}
-          </p>
-        ))}
-        {/*Add marker button*/}
-        {props.markers.length > 0 && (
-          <div style={{ margin: "4px 0" }}>
-            <Button
-              size="mini"
-              type={"button"}
-              onClick={props.handleAddMarkerClick}
-              icon
-              labelPosition="left"
+            <div
+              className="ui button active"
+              id="btnG"
+              onClick={props.clickGoogle}
             >
-              <Icon name="map marker alternate" />
-              Add marker
-            </Button>
+              {" "}
+              Google{" "}
+            </div>
+            <div className="or" />
+            <div
+              className="ui button violet"
+              id="btnC"
+              onClick={props.clickCustom}
+            >
+              {" "}
+              מאגר פנימי{" "}
+            </div>
           </div>
-        )}
-        <Checkbox
-          question={props.checkQuestion}
-          checked={props.checked}
-          handleCheck={e => props.handleCheck(e)}
-        />
+
+          {<div id="inputC" style={{ minWidth: "20vw" }}>
+            <Autosuggest
+              placesList={props.placesList}
+              onPlacesChangedAutoCompleate={props.onPlacesChangedAutoCompleate}
+              answer={props.answer}
+              changed={props.changed}
+              changeToFalse={props.changeToFalse}
+              clickGoogle={props.clickGoogle}
+              locationFromDB={props.locationFromDB}
+              isNewForm={props.isNewForm}
+              liftUpValue={props.handleInputChange}
+              placeValue={props.placeName}
+            />
+          </div>}
+          {/*Place name from Google maps*/}
+          {/*{(props.placeName.length > 0 || props.nameWasModified) && (*/}
+            {/*<Input*/}
+              {/*onChange={props.handleInputChange}*/}
+              {/*name={"placeName"}*/}
+              {/*value={props.placeName}*/}
+              {/*style={{ marginTop: "4px", direction: "RTL", textAlign: "right" }}*/}
+            {/*/>*/}
+          {/*)}*/}
+          {/*List of markers*/}
+          {props.markers.map((marker, index) => (
+            <p key={`marker${index}`}>
+              {`Pointer ${index}`}{" "}
+              {props.markers.length > 1 && (
+                <Icon
+                  style={{ cursor: "pointer" }}
+                  onClick={() => props.removeMarker(index)}
+                  name={"trash"}
+                />
+              )}
+            </p>
+          ))}
+          {/*Add marker button*/}
+          {props.markers.length > 0 && (
+            <div style={{ margin: "4px 0" }}>
+              <Button
+                size="mini"
+                type={"button"}
+                onClick={props.handleAddMarkerClick}
+                icon
+                labelPosition="left"
+              >
+                <Icon name="map marker alternate" />
+                Add marker
+              </Button>
+            </div>
+          )}
+        </div>
+        <div style={{ minWidth: "20vw", textAlign: "right" }}>
+          <Checkbox
+            question={props.checkQuestion}
+            checked={props.checked}
+            handleCheck={e => props.handleCheck(e)}
+          />
+        </div>
       </div>
     )}
   </div>

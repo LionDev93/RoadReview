@@ -10,7 +10,8 @@ import TextField from "@material-ui/core/TextField";
 import Paper from "@material-ui/core/Paper";
 import MenuItem from "@material-ui/core/MenuItem";
 import { withStyles } from "@material-ui/core/styles";
-import { Button, Icon } from "semantic-ui-react";
+import { Icon } from "semantic-ui-react";
+import Button from "@material-ui/core/Button";
 
 function renderInputComponent(inputProps) {
   const { classes, inputRef = () => {}, ref, ...other } = inputProps;
@@ -141,6 +142,13 @@ class IntegrationAutosuggest extends React.Component {
       this.setState({
         suggestionSelected: false
       });
+      this.props.liftUpValue({
+        target: {
+          type: "input",
+          value: newValue,
+          name: "placeName"
+        }
+      });
     }
   };
   onSuggestionSelected = (
@@ -186,9 +194,8 @@ class IntegrationAutosuggest extends React.Component {
           inputProps={{
             classes,
             placeholder: "חפש שם מקום במאגר שלנו",
-            value: this.state.single,
+            value: this.props.placeValue,
             onChange: this.handleChange("single"),
-            disabled: this.props.locationFromDB
           }}
           theme={{
             container: classes.container,
@@ -197,18 +204,29 @@ class IntegrationAutosuggest extends React.Component {
             suggestion: classes.suggestion
           }}
           renderSuggestionsContainer={options => {
-            if (options.children) {
-              // if we've got suggestions
+            if (true) {
               return (
                 <Paper {...options.containerProps} square>
                   {options.children}
+                  {!options.children && this.state.single &&
+                    !this.state.suggestionSelected &&
+                    this.props.isNewForm && (
+                      <Button
+                        id={"findLocationBtn"}
+                        onClick={this.props.clickGoogle}
+                        color="secondary"
+                        style={{ margin: "10px 4px" }}
+                      >
+                        Find location
+                      </Button>
+                    )}
                 </Paper>
               );
             } else if (
               this.state.single &&
               options.children === null &&
-              !this.state.suggestionSelected
-                && this.props.isNewForm
+              !this.state.suggestionSelected &&
+              this.props.isNewForm
             ) {
               // show google button if no suggestions
               return (
