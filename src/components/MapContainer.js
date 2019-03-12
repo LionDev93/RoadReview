@@ -331,15 +331,17 @@ const MapContainer = compose(
               updatedFromPost: true,
               locationFromDB: true
             });
-            this.setState({
-              markers: this.props.post.coords.map(place => {
-                console.log(place);
-                return {
-                  position: getPosition(parseFloat(place[0]), parseFloat(place[1])),
-                  ref: React.createRef()
-                };
-              })
-            });
+            if (this.props.post && this.props.post.coords && this.props.post.coords.length > 0) {
+              this.setState({
+                markers: this.props.post.coords.map(place => {
+                  console.log(place);
+                  return {
+                    position: getPosition(parseFloat(place[0]), parseFloat(place[1])),
+                    ref: React.createRef()
+                  };
+                })
+              });
+            }
           }
         },
         handleInputChange: event => {
