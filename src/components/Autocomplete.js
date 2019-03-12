@@ -195,7 +195,7 @@ class IntegrationAutosuggest extends React.Component {
             classes,
             placeholder: "חפש שם מקום במאגר שלנו",
             value: this.props.placeValue,
-            onChange: this.handleChange("single"),
+            onChange: this.handleChange("single")
           }}
           theme={{
             container: classes.container,
@@ -208,9 +208,11 @@ class IntegrationAutosuggest extends React.Component {
               return (
                 <Paper {...options.containerProps} square>
                   {options.children}
-                  {!options.children && this.state.single &&
+                  {!options.children &&
+                    this.state.single &&
                     !this.state.suggestionSelected &&
-                    this.props.isNewForm && (
+                    this.props.isNewForm &&
+                    !this.props.isMap && (
                       <Button
                         id={"findLocationBtn"}
                         onClick={this.props.clickGoogle}

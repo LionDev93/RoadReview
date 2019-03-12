@@ -71,6 +71,7 @@ const MapContainer = compose(
         locationFromDB: false,
         updatedFromPost: false,
         nameWasModified: false,
+        isMap: false,
         writeGoogleCurrentPlace: googlePlace => {
           let newPlace = {
             lat: googlePlace.geometry.location.lat().toString(),
@@ -264,6 +265,9 @@ const MapContainer = compose(
           // this.state.toggle("btnG", "inputG", "btnC", "findLocationBtn");
           document.getElementById("findLocationBtn").style.display = "none";
           document.getElementById("inputG").style.display = "block";
+          this.setState({
+            isMap: true
+          })
         },
 
         clickCustom: () => {
@@ -573,6 +577,7 @@ const MapContainer = compose(
               isNewForm={props.isNewForm}
               liftUpValue={props.handleInputChange}
               placeValue={props.placeName}
+              isMap={props.isMap}
             />
           </div>}
           {/*Place name from Google maps*/}
