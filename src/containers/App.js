@@ -270,7 +270,7 @@ class App extends Component {
                   </Top>
                 );
               }} />
-              <Route path={"/"} exact render={() => {
+              <Route path={"/"} exact render={(routeProps) => {
                 let string = "/" + (text[number] === undefined ? "" : text[number].datastore_id);
                          
                 return (
@@ -289,7 +289,6 @@ class App extends Component {
                       data={this.state.userText}
                       isFormMap={false}
                     />
-
                     <Survey postNum={number}
                       showPrev={this.showPrev} showNext={this.showNext} showEl={this.showEl}
                       numberOfPreviousElemnts={previosIndexList.length}

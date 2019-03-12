@@ -212,7 +212,8 @@ class Survey extends Component {
     headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
     headers.set('Accept', 'application/json');
     headers.set('Content-Type', 'application/json');
-
+    delete data.lat;
+    delete data.lon;
     const toDB = JSON.stringify({ item: data });
     console.log("UPDATE: ", toDB);
 
@@ -305,6 +306,7 @@ class Survey extends Component {
             post={this.props.post}
             validator={this.props.validator}
             data={this.props.data}
+            isNewForm={false}
           />
 
           <ErrorModal

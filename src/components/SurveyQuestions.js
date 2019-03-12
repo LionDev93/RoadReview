@@ -132,6 +132,7 @@ const SurveyQuestions = (props) => {
                     post={props.post}
                     data={props.data}
                     isFormMap={true}
+                    isNewForm={props.isNewForm}
                     showCurrentMarker
                 />
                 {validator.message('google', answers.place && answers.coords && answers.coords.length > 0 , 'google')}

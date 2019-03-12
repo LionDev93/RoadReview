@@ -187,7 +187,8 @@ class IntegrationAutosuggest extends React.Component {
             classes,
             placeholder: "חפש שם מקום במאגר שלנו",
             value: this.state.single,
-            onChange: this.handleChange("single")
+            onChange: this.handleChange("single"),
+            disabled: this.props.locationFromDB
           }}
           theme={{
             container: classes.container,
@@ -207,6 +208,7 @@ class IntegrationAutosuggest extends React.Component {
               this.state.single &&
               options.children === null &&
               !this.state.suggestionSelected
+                && this.props.isNewForm
             ) {
               // show google button if no suggestions
               return (

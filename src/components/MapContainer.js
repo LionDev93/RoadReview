@@ -68,6 +68,8 @@ const MapContainer = compose(
         placeName: "",
         editedFromDB: false,
         editedChecker: true,
+        locationFromDB: false,
+        updatedFromPost: false,
         writeGoogleCurrentPlace: googlePlace => {
           let newPlace = {
             lat: googlePlace.geometry.location.lat().toString(),
@@ -95,30 +97,67 @@ const MapContainer = compose(
           //TODO same here as below
           // this.setState({markers});
         },
-        onPositionChanged: () => {
+        onPositionChanged: ref => {
           console.log("marker moved");
-          let editPlaces = this.state.updatePlaces();
-          this.setState({ currentPlace: editPlaces });
+          let editPlaces = this.state.updatePlaces(ref);
+          // this.setState({ currentPlace: editPlaces });
         },
 
-        updatePlaces: () => {
+        // markers moves
+        updatePlaces: (ref, index) => {
           console.log("f updatePlaces");
           let editedPlace = Object.assign({}, this.state.currentPlace);
-          editedPlace.place_name =
-            editedPlace.place_name.startsWith("_edited") ||
-            this.state.editedFromDB
-              ? ("_edited" + this.state.placeName)
-              : this.state.placeName;
-          const position = refs.marker.getPosition();
-          let lat = position.lat().toString();
-          let lng = position.lng().toString();
-          editedPlace.lat = lat;
-          editedPlace.lon = lng;
-          editedPlace.coords = this.state.markers.map(marker => [
-            marker.position.lat(),
-            marker.position.lng()
-          ]);
-          this.props.handleAnswer(editedPlace);
+          console.log("is new form: " + this.props.isNewForm);
+          let place_name = "";
+          if (this.props.isNewForm && this.state.locationFromDB) {
+            place_name = editedPlace.place_name.startsWith("_edited")
+              ? editedPlace.place_name
+              : "_edited" + editedPlace.place_name;
+            console.log("p_n: " + place_name);
+          }
+          if (!this.props.isNewForm && !this.state.locationFromDB) {
+            place_name = this.state.placeName;
+          }
+          if (this.props.isEditor) {
+            place_name = this.state.currentPlace.place_name;
+          }
+          // editedPlace.place_name =
+          //   editedPlace.place_name.startsWith("_edited") ||
+          //   this.state.editedFromDB
+          //     ? ("_edited" + this.state.placeName)
+          //     : this.state.placeName;
+          // console.log(refs.marker);
+          // const position = refs.marker.getPosition();
+          // let lat = position.lat().toString();
+          // let lng = position.lng().toString();
+          // if (ref) console.log(ref.current.getPosition().lat());
+          // editedPlace.lat = lat;
+          // editedPlace.lon = lng;
+          // editedPlace.coords = this.state.markers.map(marker => [
+          //   marker.position.lat(),
+          //   marker.position.lng()
+          // ]);
+          console.log("Lat: " + ref.current.getPosition().lat());
+          console.log("Lng: " + ref.current.getPosition().lng());
+          let changedMarkers = Object.assign([], this.state.markers);
+          changedMarkers[index] = {
+            ...changedMarkers[index],
+            position: new google.maps.LatLng(
+              ref.current.getPosition().lat(),
+              ref.current.getPosition().lng()
+            )
+          };
+          this.setState({
+            markers: changedMarkers
+          });
+          console.log(changedMarkers);
+          this.props.handleAnswer({
+            place_name: place_name,
+            coords: changedMarkers.map(marker => [
+              marker.position.lat(),
+              marker.position.lng()
+            ])
+          });
           return editedPlace;
         },
 
@@ -133,7 +172,6 @@ const MapContainer = compose(
         onSearchBoxMounted: ref => {
           refs.searchBox = ref;
         },
-
         // Location from map
         onPlacesChanged: () => {
           this.setState({
@@ -160,7 +198,8 @@ const MapContainer = compose(
             }
           });
           const nextMarkers = places.map(place => ({
-            position: place.geometry.location
+            position: place.geometry.location,
+            ref: React.createRef()
           }));
           const nextCenter = _.get(
             nextMarkers,
@@ -187,14 +226,17 @@ const MapContainer = compose(
         onPlacesChangedAutoCompleate: (newmarkers, newPlace) => {
           console.log("f onPlacesChangedAutoCompleate");
           this.setState({
-            editedFromDB: true
+            editedFromDB: true,
+            locationFromDB: true
           });
           let newcenter = newmarkers[0].position;
           this.setState(
             {
               currentPlace: newPlace,
               center: newcenter,
-              markers: newmarkers,
+              markers: newmarkers.map(marker => {
+                return { ...marker, ref: React.createRef() };
+              }),
               editedChecker: true,
               placeName: newPlace.place_name
             },
@@ -257,7 +299,8 @@ const MapContainer = compose(
               position: new google.maps.LatLng(
                 parseFloat(refs.map.getCenter().lat()),
                 parseFloat(refs.map.getCenter().lng())
-              )
+              ),
+              ref: React.createRef()
             }
           ];
           this.state.updateMarkersInAnswers();
@@ -275,6 +318,29 @@ const MapContainer = compose(
               marker.position.lng()
             ])
           });
+        },
+        updateMapFromPost: () => {
+          let getPosition = (lat, lng) => {
+            return new google.maps.LatLng(
+                parseFloat(lat),
+                parseFloat(lng)
+            )
+          };
+          if (this.props.isNewForm !== undefined && !this.props.isNewForm && !this.state.updatedFromPost) {
+            this.setState({
+              updatedFromPost: true,
+              locationFromDB: true
+            });
+            this.setState({
+              markers: this.props.post.coords.map(place => {
+                console.log(place);
+                return {
+                  position: getPosition(parseFloat(place[0]), parseFloat(place[1])),
+                  ref: React.createRef()
+                };
+              })
+            });
+          }
         },
         handleInputChange: event => {
           const target = event.target;
@@ -383,41 +449,47 @@ const MapContainer = compose(
       defaultCenter={{ lat: 36, lng: 32 }}
     >
       {props.showCurrentMarker &&
-        props.markers.map((marker, index) => (
-          <div key={`marker${index}`}>
-            <Marker
-              key={index}
-              position={marker.position}
-              draggable={true}
-              onPositionChanged={props.onPositionChanged}
-              ref={props.onMarkerMounted}
-            >
-              <InfoWindow>
-                <div>{index}</div>
+        props.markers.map((marker, index) => {
+          // console.log("marker_ref: " + marker.ref);
+          return (
+            <div key={`marker${index}`}>
+              <Marker
+                key={index}
+                position={marker.position}
+                draggable={true}
+                ref={marker.ref}
+                onPositionChanged={() => props.updatePlaces(marker.ref, index)}
+                // ref={props.onMarkerMounted}
+              >
+                <InfoWindow>
+                  <div>{index}</div>
+                </InfoWindow>
+              </Marker>
+            </div>
+          );
+        })}
+      {false &&
+        props.questionMarkers.map((marker, index) => (
+          <Marker
+            key={index}
+            position={{ lat: marker.lat, lng: marker.lon }}
+            icon={markerIcon}
+            onClick={() => props.onShowInfo(index)}
+          >
+            {props.showInfoIndex === index && (
+              <InfoWindow
+                onCloseClick={() => {
+                  props.onCloseInfo();
+                }}
+                options={{ closeBoxURL: ``, enableEventPropagation: true }}
+              >
+                <div>{props.getPlaceData(marker.place)}</div>
               </InfoWindow>
-            </Marker>
-          </div>
+            )}
+          </Marker>
         ))}
-      {props.questionMarkers.map((marker, index) => (
-        <Marker
-          key={index}
-          position={{ lat: marker.lat, lng: marker.lon }}
-          icon={markerIcon}
-          onClick={() => props.onShowInfo(index)}
-        >
-          {props.showInfoIndex === index && (
-            <InfoWindow
-              onCloseClick={() => {
-                props.onCloseInfo();
-              }}
-              options={{ closeBoxURL: ``, enableEventPropagation: true }}
-            >
-              <div>{props.getPlaceData(marker.place)}</div>
-            </InfoWindow>
-          )}
-        </Marker>
-      ))}
     </GoogleMap>
+    {props.updateMapFromPost()}
     {props.isFormMap && (
       <div style={{ minWidth: "20vw" }}>
         <SearchBox
@@ -481,6 +553,8 @@ const MapContainer = compose(
             changed={props.changed}
             changeToFalse={props.changeToFalse}
             clickGoogle={props.clickGoogle}
+            locationFromDB={props.locationFromDB}
+            isNewForm={props.isNewForm}
           />
         </div>
         {/*Place name from Google maps*/}
@@ -497,7 +571,11 @@ const MapContainer = compose(
           <p key={`marker${index}`}>
             {`Pointer ${index}`}{" "}
             {props.markers.length > 1 && (
-              <Icon style={{cursor: "pointer"}} onClick={() => props.removeMarker(index)} name={"trash"} />
+              <Icon
+                style={{ cursor: "pointer" }}
+                onClick={() => props.removeMarker(index)}
+                name={"trash"}
+              />
             )}
           </p>
         ))}

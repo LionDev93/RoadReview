@@ -21,8 +21,8 @@ class NewForm extends Component {
   static defaultProps = {
     constants: {
       numericFields: ['difficulty', 'score'],
-      textFields: ['place', 'lon', 'lat', 'story'],
-      arrayFields: ['labels', 'question_images', 'story_images'],
+      textFields: ['place', 'story'],
+      arrayFields: ['labels', 'question_images', 'coords', 'story_images'],
       checkFields: ['tourists_relevancy', 'night_item', 'see_item']
     },
   }
@@ -286,6 +286,7 @@ class NewForm extends Component {
             post={this.props.post}
             data={this.props.data}
             validator={this.props.validator}
+            isNewForm={true}
           />
           <ErrorModal
             text={this.state.errorMsg}
