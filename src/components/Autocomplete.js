@@ -222,7 +222,7 @@ class IntegrationAutosuggest extends React.Component {
                         color="secondary"
                         style={{ margin: "10px 4px" }}
                       >
-                        Find location
+                        חפש מקום בגוגל
                       </Button>
                     )}
                 </Paper>

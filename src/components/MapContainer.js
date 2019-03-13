@@ -592,7 +592,7 @@ const MapContainer = compose(
           {/*List of markers*/}
           {props.markers.map((marker, index) => (
             <p key={`marker${index}`}>
-              {`Pointer ${index}`}{" "}
+              {`${index}נעץ `}{" "}
               {props.markers.length > 1 && (
                 <Icon
                   style={{ cursor: "pointer" }}
@@ -613,7 +613,7 @@ const MapContainer = compose(
                 labelPosition="left"
               >
                 <Icon name="map marker alternate" />
-                Add marker
+                הוסף מיקום
               </Button>
             </div>
           )}
