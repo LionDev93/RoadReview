@@ -99,7 +99,8 @@ class IntegrationAutosuggest extends React.Component {
       single: this.props.answer,
       popper: "",
       suggestions: [],
-      suggestionSelected: false
+      suggestionSelected: false,
+      formTouched: false
     };
   }
   getSuggestions(value) {
@@ -140,7 +141,8 @@ class IntegrationAutosuggest extends React.Component {
     // change state to show "Find location" button in UI for case where no suggestions
     if (name === "single") {
       this.setState({
-        suggestionSelected: false
+        suggestionSelected: false,
+        formTouched: true
       });
       this.props.liftUpValue({
         target: {
@@ -211,7 +213,7 @@ class IntegrationAutosuggest extends React.Component {
                   {!options.children &&
                     this.state.single &&
                     !this.state.suggestionSelected &&
-                    this.props.isNewForm &&
+                    this.state.formTouched &&
                     !this.props.isMap && (
                       <Button
                         id={"findLocationBtn"}
