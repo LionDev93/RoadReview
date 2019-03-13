@@ -592,7 +592,7 @@ const MapContainer = compose(
           {/*List of markers*/}
           {props.markers.map((marker, index) => (
             <p key={`marker${index}`}>
-              {`${index}נעץ `}{" "}
+              {index}{" "}{"נעץ"}{" "}
               {props.markers.length > 1 && (
                 <Icon
                   style={{ cursor: "pointer" }}
