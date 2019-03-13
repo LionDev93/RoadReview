@@ -62,7 +62,8 @@ function getSuggestionValue(suggestion) {
 
 const styles = theme => ({
   input: {
-    textAlign: "right"
+    textAlign: "right",
+    direction: "rtl"
   },
   root: {
     // height: 250,
