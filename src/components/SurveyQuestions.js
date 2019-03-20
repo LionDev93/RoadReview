@@ -11,6 +11,8 @@ import Checkbox from './Checkbox';
 
 import '../css/Segment.css';
 import { bool } from 'prop-types';
+import ChildQuestion from "../partials/ChildQuestion";
+import {List} from "semantic-ui-react";
 
 const SurveyQuestions = (props) => {
 
@@ -95,101 +97,166 @@ const SurveyQuestions = (props) => {
     const questions = pr.questions;
     let answers = props.answers;
     let validator = props.validator;
+
+    const related = props.post.related;
     
     return (
-        <div className="Survey">
-            <form id='form'>
+      <div className="Survey">
+        <form id="form">
+          <TriviaQuestion
+            question={questions.TRIVIA1}
+            tooltip={"answer is.."}
+            numbers={[
+              "question",
+              "right_answer",
+              "wrong_answer1",
+              "wrong_answer2",
+              "wrong_answer3"
+            ]}
+            handleTextInput={(e, number) =>
+              handleAnswerTrivia(1, number, e)
+            }
+            value1={answers.trivia1.question}
+            value2={answers.trivia1.right_answer}
+            value3={answers.trivia1.wrong_answer1}
+            value4={answers.trivia1.wrong_answer2}
+            value5={answers.trivia1.wrong_answer3}
+          />
 
-                <TriviaQuestion
-                    question={questions.TRIVIA1}
-                    tooltip={'answer is..'}
-                    numbers={['question', 'right_answer', 'wrong_answer1', 'wrong_answer2', 'wrong_answer3']}
-                    handleTextInput={(e, number) => handleAnswerTrivia(1, number, e)}
-                    value1={answers.trivia1.question}
-                    value2={answers.trivia1.right_answer}
-                    value3={answers.trivia1.wrong_answer1}
-                    value4={answers.trivia1.wrong_answer2}
-                    value5={answers.trivia1.wrong_answer3}
-                />
+          <TextArea
+            question={questions.EDIT_TEXT}
+            handleTextInput={e => handleAnswer("story", e)}
+            value={answers.story}
+            rows={"10"}
+          />
 
-                <TextArea
-                    question={questions.EDIT_TEXT}
-                    handleTextInput={(e) => handleAnswer('story', e)}
-                    value={answers.story}
-                    rows={'10'}
-                />
-                                
-                <Question question={questions.PLACE} />
-                <MapContainer
-                    handleAnswer={(place) => handleAnswerPlace(place)}
-                    handleCheck={(e) => handleCheck('is_group', e)}
-                    checkQuestion={questions.IS_GROUP}
-                    checked={answers.is_group}
-                    placesList={props.placesList}
-                    answer={answers.place}
-                    changed={props.changed}
-                    changeToFalse={props.changeToFalse}
-                    post={props.post}
-                    data={props.data}
-                    isFormMap={true}
-                    isNewForm={props.isNewForm}
-                    showCurrentMarker
-                />
-                {validator.message('google', answers.place && answers.coords && answers.coords.length > 0 , 'google')}
-                
-                <ImgUploader
-                    question={questions.PRE_IMG}
-                    handleImgLoad={(newImg) => handleAnswerArray('question_images', newImg)}
-                    answer={answers.question_images[answers.question_images.length - 1]} // to remember image 
-                />
-                
-                <ImgUploader
-                    question={questions.POST_IMG}
-                    handleImgLoad={(newImg) => handleAnswerArray('story_images', newImg)}
-                    answer={answers.story_images[answers.story_images.length - 1]} // to remember image 
-                />
-                
-                <TextArea
-                    question={questions.TITLE}
-                    handleTextInput={(e) => handleAnswerArray('labels', e.target.value)}
-                    value={answers.labels[answers.labels.length - 1]}
-                />
-                
-                <TextArea
-                    question={questions.GROUPS}
-                    handleTextInput={(e) => handleAnswerArray('groups', e.target.value)}
-                    value={answers.groups ? answers.groups[answers.groups.length - 1] : ''}
-                />
+          <Question question={questions.PLACE} />
 
-                <Radio
-                    question={questions.DIFFICULTY}
-                    handleOptionChange={(e) => handleAnswer('difficulty', e)}
-                    answer={answers.difficulty}
-                />
+          <div>
+            <h1 className={"h1Teg"}>Related</h1>
+          </div>
+          <div style={{ margin: "0 0 40px 0", textAlign: "right" }}>
+            {!related || (related.length === 0 && <p>No related</p>)}
+            {related && (
+              <List style={{ direction: "RTL" }} celled horizontal>
+                {related.map(r => (
+                  <ChildQuestion question={r} key={r.datastore_id} />
+                ))}
+              </List>
+            )}
+          </div>
 
-                <Radio
-                    question={questions.INTERESTING}
-                    handleOptionChange={(e) => handleAnswer('score', e)}
-                    answer={answers.score}
-                />
+          <MapContainer
+            handleAnswer={place => handleAnswerPlace(place)}
+            handleCheck={e => handleCheck("is_group", e)}
+            checkQuestion={questions.IS_GROUP}
+            checked={answers.is_group}
+            placesList={props.placesList}
+            answer={answers.place}
+            changed={props.changed}
+            changeToFalse={props.changeToFalse}
+            post={props.post}
+            data={props.data}
+            isFormMap={true}
+            isNewForm={props.isNewForm}
+            showCurrentMarker
+          />
+          {validator.message(
+            "google",
+            answers.place && answers.coords && answers.coords.length > 0,
+            "google"
+          )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 30px', marginTop: "40px" }}>
-                    <Checkbox question={questions.TOURISTS_REL} checked={answers.tourists_relevancy}
-                        handleCheck={(e) => handleCheck('tourists_relevancy', e)} />                        
+          <ImgUploader
+            question={questions.PRE_IMG}
+            handleImgLoad={newImg =>
+              handleAnswerArray("question_images", newImg)
+            }
+            answer={
+              answers.question_images[answers.question_images.length - 1]
+            } // to remember image
+          />
 
-                    <Checkbox question={questions.NIGHT_ITEM} checked={answers.night_item}
-                        handleCheck={(e) => handleCheck('night_item', e)} />
+          <ImgUploader
+            question={questions.POST_IMG}
+            handleImgLoad={newImg =>
+              handleAnswerArray("story_images", newImg)
+            }
+            answer={answers.story_images[answers.story_images.length - 1]} // to remember image
+          />
 
-                    <Checkbox question={questions.SEE_ITEM} checked={answers.see_item}
-                        handleCheck={(e) => handleCheck('see_item', e)} />
-                </div>
+          <TextArea
+            question={questions.TITLE}
+            handleTextInput={e =>
+              handleAnswerArray("labels", e.target.value)
+            }
+            value={answers.labels[answers.labels.length - 1]}
+          />
 
-                <SmallMessage name='success' text1='הטופס הושלם'
-                    text2='התשובות נשמרו' />
-                <SmallMessage name='negative' text1='הטופס לא נשלח'
-                    text2='שים לב - חובה למלא את דירוג הקשר למיקום' />
-            </form>
-        </div>)
+          <TextArea
+            question={questions.GROUPS}
+            handleTextInput={e =>
+              handleAnswerArray("groups", e.target.value)
+            }
+            value={
+              answers.groups
+                ? answers.groups[answers.groups.length - 1]
+                : ""
+            }
+          />
+
+          <Radio
+            question={questions.DIFFICULTY}
+            handleOptionChange={e => handleAnswer("difficulty", e)}
+            answer={answers.difficulty}
+          />
+
+          <Radio
+            question={questions.INTERESTING}
+            handleOptionChange={e => handleAnswer("score", e)}
+            answer={answers.score}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              margin: "10px 30px",
+              marginTop: "40px"
+            }}
+          >
+            <Checkbox
+              question={questions.TOURISTS_REL}
+              checked={answers.tourists_relevancy}
+              handleCheck={e => handleCheck("tourists_relevancy", e)}
+            />
+
+            <Checkbox
+              question={questions.NIGHT_ITEM}
+              checked={answers.night_item}
+              handleCheck={e => handleCheck("night_item", e)}
+            />
+
+            <Checkbox
+              question={questions.SEE_ITEM}
+              checked={answers.see_item}
+              handleCheck={e => handleCheck("see_item", e)}
+            />
+          </div>
+
+          <SmallMessage
+            name="success"
+            text1="הטופס הושלם"
+            text2="התשובות נשמרו"
+          />
+          <SmallMessage
+            name="negative"
+            text1="הטופס לא נשלח"
+            text2="שים לב - חובה למלא את דירוג הקשר למיקום"
+          />
+        </form>
+      </div>
+    );
 
 }
 

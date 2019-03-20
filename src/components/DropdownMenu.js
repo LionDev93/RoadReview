@@ -2,7 +2,7 @@ import React from 'react';
 import { Dropdown, Icon } from 'semantic-ui-react'
 import fireDB from '../fireDB';
 import gcp_config from '../GCP_configs';
-
+import { Link } from "react-router-dom";
 
 const DropdownMenu = (props) => {
 
@@ -48,7 +48,7 @@ const DropdownMenu = (props) => {
       style={{ height: '35px', alignSelf: 'flex-end' }}>
       <Dropdown.Menu className='right' >
 
-        <Dropdown.Item onClick={props.setNew} >
+        <Dropdown.Item onClick={() => props.setNew(true)} as={Link} to={"/addNewItem"} >
           <Icon name='edit' />
           <span className='text'>Add new item</span>
         </Dropdown.Item>

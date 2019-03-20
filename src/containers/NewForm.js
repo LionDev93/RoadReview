@@ -4,6 +4,7 @@ import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
 import ErrorModal from '../components/ErrorModal';
 import fetchStream from 'fetch-readablestream';
+import {Redirect} from "react-router-dom";
 class NewForm extends Component {
 
   constructor(props) {
@@ -14,7 +15,8 @@ class NewForm extends Component {
       answers: this.setNewFields(this.props.post),
       handleValidate: this.handleValidate.bind(this),
       showModal: false,
-      errorMsg: ''
+      errorMsg: '',
+      childWasSaved: false
     }; // <- set up react state
   }
 
@@ -22,7 +24,7 @@ class NewForm extends Component {
     constants: {
       numericFields: ['difficulty', 'score'],
       textFields: ['place', 'story'],
-      arrayFields: ['labels', 'question_images', 'coords', 'story_images'],
+      arrayFields: ['labels', 'question_images', 'coords', 'story_images', 'parents'],
       checkFields: ['tourists_relevancy', 'night_item', 'see_item']
     },
   }
@@ -212,7 +214,9 @@ class NewForm extends Component {
       headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
       headers.set('Accept', 'application/json');
       headers.set('Content-Type', 'application/json');
-
+      if (this.props.parentId) {
+        data.parents = [parseInt(this.props.parentId)];
+      }
       const toDB = JSON.stringify({ item: data });
       console.log("SAVE NEW ITEM: ", toDB);
   
@@ -229,6 +233,11 @@ class NewForm extends Component {
         }
         this.props.getDataItems();
         this.showEl('success', () => { this.props.setNew(false) });
+        if (this.props.parentId) {
+          this.setState({
+            childWasSaved: true
+          })
+        }
       })
       .then(chunks => {        
         chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
@@ -275,6 +284,9 @@ class NewForm extends Component {
   };
 
   render() {
+    if (this.state.childWasSaved) {
+      return <Redirect to={"/"} />
+    }
     return (
       <div>
           <SurveyQuestions
@@ -307,7 +319,7 @@ class NewForm extends Component {
             <i className="arrow left icon"></i>
             Cancel
             </button>
-          <button className='ui right labeled icon violet basic button'
+          <button type={"button"} className='ui right labeled icon violet basic button'
             style={{ margin: '30px' }}
             onClick={(e) => { this.addAnswers(e) }}>
             Save
