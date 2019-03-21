@@ -59,6 +59,7 @@ class DataTable extends Component {
   render() {
     const { data } = this.state;
     const fullTable = this.props.fullTable;
+    console.log(data);
     return (
       <div style={{ textAlign: "right", direction: "rtl" }}>
         <ReactTable
@@ -66,11 +67,12 @@ class DataTable extends Component {
           loading={this.props.tableLoading}
           loadingText={"ˈlōdiNG..."}
           data={data}
+          classname={"testing"}
           columns={[
             {
               Header: "שאלות המשך",
               accessor: "children",
-              width: 140,
+              width: 100,
               Cell: ({ row, original }) => (
                 <List>
                   {original.related &&
@@ -88,7 +90,7 @@ class DataTable extends Component {
             {
               Header: "שאלות מקדימות",
               accessor: "parent",
-              width: 140,
+              width: 100,
               Cell: ({ row, original }) => (
                 <List>
                   {original.parents &&
@@ -126,7 +128,7 @@ class DataTable extends Component {
             {
               Header: "Question",
               accessor: "question",
-              width: 420,
+              width: 280,
               Cell: ({ row, original }) => (
                 <textarea
                   style={{
