@@ -17,6 +17,9 @@ import SimpleReactValidator from 'simple-react-validator';
 
 import '../css/Hidden.css';
 import MapContainer from '../components/MapContainer';
+import {setPlaces} from "../store/actions/placesActions";
+import {connect} from "react-redux";
+import GroupMode from "../views/pages";
 
 class App extends Component {
 
@@ -156,11 +159,11 @@ class App extends Component {
       .then(placeData => this.setState({ placesList: placeData }, () => {
         fetch('https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1', { method: 'GET', headers: headers, })
           .then(response => response.json())
-          .then(data => this.setState({ text: data.items, tableLoading: false }, () => {
+          .then(data => {this.setState({ text: data.items, tableLoading: false }, () => {
             // console.log('data item set finish');
             this.getUserDataItems();
             this.setState({ dbIsFull: true });
-          }));
+          }); this.props.setPlaces(data.items)});
       }));
   }
 
@@ -248,6 +251,9 @@ class App extends Component {
                   return routeRender();
                 }}
               />
+              <Route path={'/group-mode'}  render={routeParams => {
+                return <Top user={user.email} itemId={false} setNew={this.setNew}><GroupMode/></Top>;
+              }} />
             </Switch>
           </Router>
         );
@@ -460,4 +466,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default connect(null, {setPlaces})(App);

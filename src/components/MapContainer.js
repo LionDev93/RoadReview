@@ -9,7 +9,8 @@ import {
   withScriptjs,
   withGoogleMap,
   GoogleMap,
-  Marker
+  Marker,
+    Circle
 } from "react-google-maps";
 import { InfoWindow } from "react-google-maps";
 import { SearchBox } from "react-google-maps/lib/components/places/SearchBox";
@@ -111,42 +112,14 @@ const MapContainer = compose(
           let editedPlace = Object.assign({}, this.state.currentPlace);
           console.log("is new form: " + this.props.isNewForm);
           let place_name = this.state.placeName;
-          // if (this.props.isNewForm && this.state.locationFromDB) {
-          //   place_name = editedPlace.place_name.startsWith("_edited")
-          //     ? editedPlace.place_name
-          //     : "_edited" + editedPlace.place_name;
-          //   console.log("p_n: " + place_name);
-          // }
-          // if (!this.props.isNewForm && !this.state.locationFromDB) {
-          //   place_name = this.state.placeName;
-          // }
-          // if (this.props.isEditor) {
-          //   place_name = this.state.currentPlace.place_name;
-          // }
-          // editedPlace.place_name =
-          //   editedPlace.place_name.startsWith("_edited") ||
-          //   this.state.editedFromDB
-          //     ? ("_edited" + this.state.placeName)
-          //     : this.state.placeName;
-          // console.log(refs.marker);
-          // const position = refs.marker.getPosition();
-          // let lat = position.lat().toString();
-          // let lng = position.lng().toString();
-          // if (ref) console.log(ref.current.getPosition().lat());
-          // editedPlace.lat = lat;
-          // editedPlace.lon = lng;
-          // editedPlace.coords = this.state.markers.map(marker => [
-          //   marker.position.lat(),
-          //   marker.position.lng()
-          // ]);
           console.log("Lat: " + ref.current.getPosition().lat());
           console.log("Lng: " + ref.current.getPosition().lng());
           let changedMarkers = Object.assign([], this.state.markers);
           changedMarkers[index] = {
             ...changedMarkers[index],
             position: new google.maps.LatLng(
-              ref.current.getPosition().lat(),
-              ref.current.getPosition().lng()
+              parseFloat(ref.current.getPosition().lat()),
+              parseFloat(ref.current.getPosition().lng())
             )
           };
           this.setState({
@@ -157,7 +130,8 @@ const MapContainer = compose(
             place_name: place_name,
             coords: changedMarkers.map(marker => [
               marker.position.lat(),
-              marker.position.lng()
+              marker.position.lng(),
+              marker.radius || undefined
             ])
           });
           return editedPlace;
@@ -237,6 +211,8 @@ const MapContainer = compose(
               currentPlace: newPlace,
               center: newcenter,
               markers: newmarkers.map(marker => {
+                console.log(`marker`);
+                console.log(marker);
                 return { ...marker, ref: React.createRef() };
               }),
               editedChecker: true,
@@ -267,7 +243,7 @@ const MapContainer = compose(
           document.getElementById("inputG").style.display = "block";
           this.setState({
             isMap: true
-          })
+          });
         },
 
         clickCustom: () => {
@@ -318,6 +294,23 @@ const MapContainer = compose(
           );
           this.state.updateMarkersInAnswers();
         },
+        updateRadius: (index, radius) => {
+          console.log(`update ${index} with ${radius}`);
+          this.setState(state => {
+            let newMarkers = [...state.markers];
+            newMarkers[index].radius = parseInt(radius);
+            this.props.handleAnswer({
+              coords: newMarkers.map(marker => [
+                marker.position.lat(),
+                marker.position.lng(),
+                marker.radius || undefined
+              ])
+            });
+            return {
+              markers: newMarkers
+            }
+          });
+        },
         updateMarkersInAnswers: () => {
           this.props.handleAnswer({
             coords: this.state.markers.map(marker => [
@@ -349,8 +342,9 @@ const MapContainer = compose(
                   return {
                     position: getPosition(
                       parseFloat(place[0]),
-                      parseFloat(place[1])
+                      parseFloat(place[1]),
                     ),
+                    radius: place[2] ? place[2] : 500,
                     ref: React.createRef()
                   };
                 }),
@@ -371,7 +365,7 @@ const MapContainer = compose(
             this.props.handleAnswer({ place_name: value });
             this.setState({
               nameWasModified: true
-            })
+            });
           }
         }
       });
@@ -473,6 +467,11 @@ const MapContainer = compose(
           // console.log("marker_ref: " + marker.ref);
           return (
             <div key={`marker${index}`}>
+              {console.log(marker)}
+              <Circle center={{
+                lat: parseFloat(marker.position.lat()),
+                lng: parseFloat(marker.position.lng())
+              }} radius={marker.radius || 500} defaultOptions={{fillColor: '#42A5F5', strokeColor: '#1565C0', strokeWeight: 1}} fillColor={'#4CAF50'} />
               <Marker
                 key={index}
                 position={marker.position}
@@ -488,10 +487,14 @@ const MapContainer = compose(
             </div>
           );
         })}
-      {props.questionMarkers.map((marker, index) => (
-          <Marker
-            key={index}
-            position={{ lat: marker.lat, lng: marker.lon }}
+      {props.questionMarkers.map((question, index) => (
+        <React.Fragment key={`question${index}`}>
+          {question.coords && question.coords.map((coords, qindex) => (<Marker
+            key={`coords${index}${qindex}`}
+            position={{
+              lat: parseFloat(coords[0]),
+              lng: parseFloat(coords[1])
+            }}
             icon={markerIcon}
             onClick={() => props.onShowInfo(index)}
           >
@@ -502,16 +505,19 @@ const MapContainer = compose(
                 }}
                 options={{ closeBoxURL: ``, enableEventPropagation: true }}
               >
-                <div>{props.getPlaceData(marker.place)}</div>
+                <div>{props.getPlaceData(question.place)}</div>
               </InfoWindow>
             )}
-          </Marker>
-        ))}
+          </Marker>))}
+        </React.Fragment>
+      ))}
     </GoogleMap>
     {props.updateMapFromPost()}
     {props.isFormMap && (
       <div>
-        <div style={{ minWidth: "20vw", minHeight: "340px", textAlign: "right" }}>
+        <div
+          style={{ minWidth: "20vw", minHeight: "340px", textAlign: "right" }}
+        >
           <SearchBox
             ref={props.onSearchBoxMounted}
             bounds={props.bounds}
@@ -565,34 +571,45 @@ const MapContainer = compose(
             </div>
           </div>
 
-          {<div id="inputC" style={{ minWidth: "20vw" }}>
-            <Autosuggest
-              placesList={props.placesList}
-              onPlacesChangedAutoCompleate={props.onPlacesChangedAutoCompleate}
-              answer={props.answer}
-              changed={props.changed}
-              changeToFalse={props.changeToFalse}
-              clickGoogle={props.clickGoogle}
-              locationFromDB={props.locationFromDB}
-              isNewForm={props.isNewForm}
-              liftUpValue={props.handleInputChange}
-              placeValue={props.placeName}
-              isMap={props.isMap}
-            />
-          </div>}
+          {
+            <div id="inputC" style={{ minWidth: "20vw" }}>
+              <Autosuggest
+                placesList={props.placesList}
+                onPlacesChangedAutoCompleate={
+                  props.onPlacesChangedAutoCompleate
+                }
+                answer={props.answer}
+                changed={props.changed}
+                changeToFalse={props.changeToFalse}
+                clickGoogle={props.clickGoogle}
+                locationFromDB={props.locationFromDB}
+                isNewForm={props.isNewForm}
+                liftUpValue={props.handleInputChange}
+                placeValue={props.placeName}
+                isMap={props.isMap}
+              />
+            </div>
+          }
           {/*Place name from Google maps*/}
           {/*{(props.placeName.length > 0 || props.nameWasModified) && (*/}
-            {/*<Input*/}
-              {/*onChange={props.handleInputChange}*/}
-              {/*name={"placeName"}*/}
-              {/*value={props.placeName}*/}
-              {/*style={{ marginTop: "4px", direction: "RTL", textAlign: "right" }}*/}
-            {/*/>*/}
+          {/*<Input*/}
+          {/*onChange={props.handleInputChange}*/}
+          {/*name={"placeName"}*/}
+          {/*value={props.placeName}*/}
+          {/*style={{ marginTop: "4px", direction: "RTL", textAlign: "right" }}*/}
+          {/*/>*/}
           {/*)}*/}
           {/*List of markers*/}
-          {props.markers.map((marker, index) => (
-            <p key={`marker${index}`}>
-              {index}{" "}{"נעץ"}{" "}
+          {props.markers.map((marker, index) => {
+            let radius = marker.radius || 500;
+            return <div key={`marker${index}`}>
+              <Icon name={"plus"} onClick={() => props.updateRadius(index, (radius + 100))} />
+              <input type={"number"} value={radius} style={{width: "60px"}}
+              onChange={(e) => {
+                props.updateRadius(index, parseInt(e.target.value))
+              }}/>
+              <Icon name={"minus"} onClick={() => props.updateRadius(index, (radius - 100))} />
+              {index} {"נעץ"}{" "}
               {props.markers.length > 1 && (
                 <Icon
                   style={{ cursor: "pointer" }}
@@ -600,8 +617,8 @@ const MapContainer = compose(
                   name={"trash"}
                 />
               )}
-            </p>
-          ))}
+            </div>
+          })}
           {/*Add marker button*/}
           {props.markers.length > 0 && (
             <div style={{ margin: "4px 0" }}>

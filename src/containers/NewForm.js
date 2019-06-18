@@ -16,7 +16,8 @@ class NewForm extends Component {
       handleValidate: this.handleValidate.bind(this),
       showModal: false,
       errorMsg: '',
-      childWasSaved: false
+      childWasSaved: false,
+      parentId: ''
     }; // <- set up react state
   }
 
@@ -217,6 +218,9 @@ class NewForm extends Component {
       if (this.props.parentId) {
         data.parents = [parseInt(this.props.parentId)];
       }
+      if (this.state.parentId.length > 0) {
+        data.parents = [parseInt(this.state.parentId)];
+      }
       const toDB = JSON.stringify({ item: data });
       console.log("SAVE NEW ITEM: ", toDB);
   
@@ -299,6 +303,11 @@ class NewForm extends Component {
             data={this.props.data}
             validator={this.props.validator}
             isNewForm={true}
+            changeParentId={(number, e) => {
+              console.log(e.target.value);
+              this.setState({parentId: e.target.value});
+            }}
+            parentId={this.state.parentId}
           />
           <ErrorModal
             text={this.state.errorMsg}

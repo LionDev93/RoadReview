@@ -160,9 +160,19 @@ class IntegrationAutosuggest extends React.Component {
   ) => {
     let lat = parseFloat(suggestion.lat);
     let lng = parseFloat(suggestion.lon);
-    let newmarker = {};
-    newmarker.position = new google.maps.LatLng(lat, lng);
-    let markers = [newmarker];
+    console.log(suggestion);
+    console.log(`suggenstion`);
+    let markers = [];
+    suggestion.coords.map(coords => {
+      markers.push({
+        position: new google.maps.LatLng(parseFloat(coords[0]), parseFloat(coords[1])),
+        radius: coords[2] ? coords[2] : 500
+      })
+    });
+    console.log(markers);
+    // let newmarker = {};
+    // newmarker.position = new google.maps.LatLng(lat, lng);
+    // let markers = [newmarker];
     this.props.onPlacesChangedAutoCompleate(markers, suggestion);
     // change state to remove "Find location" button from UI
     this.setState({

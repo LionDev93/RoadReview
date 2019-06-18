@@ -12,7 +12,8 @@ import Checkbox from './Checkbox';
 import '../css/Segment.css';
 import { bool } from 'prop-types';
 import ChildQuestion from "../partials/ChildQuestion";
-import {List} from "semantic-ui-react";
+import {List, Form, Header, Modal, Button, Icon} from "semantic-ui-react";
+import Input from "./Input";
 
 const SurveyQuestions = (props) => {
 
@@ -102,6 +103,19 @@ const SurveyQuestions = (props) => {
     
     return (
       <div className="Survey">
+        {!props.isNewForm && <div><Modal trigger={<Button color={"red"}><Icon name='remove' /> Remove question</Button>} basic size='small'>
+          <Header icon='remove' content='Remove question' />
+          <Modal.Content>
+            <p>
+              This action will remove the question. Are you sure?
+            </p>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button color='red' inverted onClick={props.removeQuestion}>
+              <Icon name='remove' /> Yes
+            </Button>
+          </Modal.Actions>
+        </Modal></div>}
         <form id="form">
           <TriviaQuestion
             question={questions.TRIVIA1}
@@ -131,12 +145,11 @@ const SurveyQuestions = (props) => {
           />
 
           <Question question={questions.PLACE} />
-
           <div>
             <h1 className={"h1Teg"}>Related</h1>
           </div>
           <div style={{ margin: "0 0 40px 0", textAlign: "right" }}>
-            {!related || (related.length === 0 && <p>No related</p>)}
+            {(!related || related.length === 0) && <p>No related</p>}
             {related && (
               <List style={{ direction: "RTL" }} celled horizontal>
                 {related.map(r => (
@@ -204,6 +217,12 @@ const SurveyQuestions = (props) => {
                 : ""
             }
           />
+
+          {/* Follow up question (parent) */}
+          <div>
+            <h1 className='h1Teg'>שאלה ראשית</h1>
+            <Input handleTextInput={props.changeParentId} value={props.parentId} />
+          </div>
 
           <Radio
             question={questions.DIFFICULTY}

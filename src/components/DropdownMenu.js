@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, Icon } from 'semantic-ui-react'
+import {Divider, Dropdown, Icon} from 'semantic-ui-react'
 import fireDB from '../fireDB';
 import gcp_config from '../GCP_configs';
 import { Link } from "react-router-dom";
@@ -53,7 +53,14 @@ const DropdownMenu = (props) => {
           <span className='text'>Add new item</span>
         </Dropdown.Item>
 
+        <Dropdown.Item onClick={() => props.setNew(true)}  as={Link} to={"/group-mode"} >
+          <Icon name='boxes' />
+          <span className='text'>Group mode</span>
+        </Dropdown.Item>
+
         {getDelete(props.itemId)}
+
+        <Divider/>
 
         <Dropdown.Item onClick={signOut}>
           <Icon name='sign-out' />

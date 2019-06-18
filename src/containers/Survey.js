@@ -7,6 +7,10 @@ import ErrorModal from '../components/ErrorModal';
 
 import '../css/Button.css';
 
+import {
+  withRouter
+} from 'react-router-dom'
+
 class Survey extends Component {
 
   constructor(props) {
@@ -281,6 +285,21 @@ class Survey extends Component {
     } return null;
   }
 
+  removeQuestion = () => {
+    const { post: {datastore_id}} = this.props;
+    let headers = new Headers();
+    headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
+    headers.set('Accept', 'application/json');
+    headers.set('Content-Type', 'application/json');
+    fetchStream(`https://roadio-master.appspot.com/v1/delete_item_control?datastore_id=${datastore_id}`, {
+      method: 'GET',
+      headers: headers,
+    }).then(res => {
+      const {history} = this.props;
+      history.push("/");
+    }).catch(err => {});
+  };
+
   render() {
 
     const { answers } = this.state;
@@ -307,6 +326,7 @@ class Survey extends Component {
             validator={this.props.validator}
             data={this.props.data}
             isNewForm={false}
+            removeQuestion={this.removeQuestion}
           />
 
           <ErrorModal
@@ -338,4 +358,4 @@ class Survey extends Component {
   }
 }
 
-export default Survey;
+export default withRouter(Survey);

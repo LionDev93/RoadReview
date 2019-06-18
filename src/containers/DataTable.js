@@ -166,7 +166,7 @@ class DataTable extends Component {
                 );
               },
               sortable: true,
-              width: 150
+              width: 100
             },
             {
               Header: "",
