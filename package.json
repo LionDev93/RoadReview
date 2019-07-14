@@ -7,7 +7,7 @@
     "autosuggest-highlight": "^3.1.1",
     "base-64": "^0.1.0",
     "fetch-readablestream": "^0.2.0",
-    "firebase": "^5.8.3",
+    "firebase": "^6.2.4",
     "firebaseui": "^3.4.1",
     "google-maps-react": "^2.0.2",
     "material-ui": "^0.20.2",

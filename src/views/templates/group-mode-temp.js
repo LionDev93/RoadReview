@@ -23,7 +23,8 @@ class GroupModeTemp extends Component {
       radius: 5000,
       groupPlaces: [],
       mapView: "all",
-      groupName: ""
+      groupName: "",
+      nextPlaces: [],
     };
     this.handleInputChange = this.handleInputChange.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
@@ -54,8 +55,8 @@ class GroupModeTemp extends Component {
   };
 
   onPositionChanged = (ref, place, index) => {
-    const { groupPlaces } = this.state;
-    const places = [...groupPlaces];
+    const { nextPlaces } = this.state;
+    const places = [...nextPlaces];
     const nextIndex = places.findIndex(
       p => p.datastore_id === place.datastore_id
     );
@@ -67,7 +68,7 @@ class GroupModeTemp extends Component {
       nextCoords[index][2]
     ];
     places[nextIndex] = { ...places[nextIndex], coords: nextCoords };
-    this.setState({ groupPlaces: places });
+    this.setState({ nextPlaces: places });
   };
 
   measure(lat1, lon1, lat2, lon2) {
@@ -86,19 +87,19 @@ class GroupModeTemp extends Component {
     return d * 1000; // meters
   }
   sendGroup = () => {
-    const { groupPlaces, groupName } = this.state;
+    const { groupPlaces, groupName, nextPlaces } = this.state;
     const { postGroup } = this.props;
     console.log(groupPlaces);
     postGroup({
       group_name: groupName,
-      items: groupPlaces.map(p => ({ ...p, ref: undefined }))
+      items: nextPlaces.map(p => ({ ...p, ref: undefined }))
     });
   };
 
   onMarkerClick(place) {
     this.setState(state => ({
-      groupPlaces: Array.from(
-        new Set([...state.groupPlaces, { ...place, ref: React.createRef() }])
+      nextPlaces: Array.from(
+        new Set([...state.nextPlaces, { ...place, ref: React.createRef() }])
       )
     }));
   }
@@ -128,7 +129,8 @@ class GroupModeTemp extends Component {
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevProps.group !== this.props.group) {
       this.setState({
-        groupPlaces: this.props.group ? this.props.group.group_items : []
+        groupPlaces: this.props.group ? this.props.group.group_items : [],
+        nextPlaces: this.props.group ? this.props.group.items : [],
       });
     }
     // const groupItems = this.props.group ? this.props.group.group_items : [];
@@ -140,11 +142,11 @@ class GroupModeTemp extends Component {
   }
 
   removeItem = index => {
-    const { groupPlaces } = this.state;
-    const nextPlaces = [...groupPlaces];
+    const { nextPlaces: places } = this.state;
+    const nextPlaces = [...places];
     nextPlaces.splice(index, 1);
     this.setState({
-      groupPlaces: nextPlaces
+      nextPlaces: nextPlaces
     });
   };
 
@@ -156,7 +158,8 @@ class GroupModeTemp extends Component {
       radius,
       groupPlaces,
       mapView,
-      groupName
+      groupName,
+      nextPlaces
     } = this.state;
 
     // const nextPlaces = places
@@ -168,7 +171,7 @@ class GroupModeTemp extends Component {
     //     );
     //   });
 
-    const nextPlaces = group ? group.items : [];
+    // const nextPlaces = group ? group.items : [];
 
     return (
       <div>
@@ -220,8 +223,8 @@ class GroupModeTemp extends Component {
             </div>
             <MapWrapper onMapClick={this.onMapClick}>
               <GroupModeMapChildren
-                places={mapView === "all" ? nextPlaces : []}
-                selectedPlaces={groupPlaces}
+                places={mapView === "all" ? groupPlaces : []}
+                selectedPlaces={nextPlaces}
                 onMarkerClick={this.onMarkerClick}
                 onPositionChanged={this.onPositionChanged}
               />
