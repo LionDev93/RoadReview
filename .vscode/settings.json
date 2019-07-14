@@ -1,0 +1,17 @@
+{
+  "editor.formatOnSave": true,
+  "javascript.format.enable": false,
+  "javascript.validate.enable": false,
+  "[html]": {
+    "editor.formatOnSave": false
+  },
+  "search.exclude": {
+    "**/build/**": true,
+    "**/node_modules/**": true,
+    "**/__generated__/**": true
+  },
+  "git.ignoreLimitWarning": true,
+  "emmet.triggerExpansionOnTab": true,
+  "emmet.showSuggestionsAsSnippets": true,
+  "editor.snippetSuggestions": "top"
+}

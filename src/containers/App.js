@@ -17,12 +17,11 @@ import SimpleReactValidator from 'simple-react-validator';
 
 import '../css/Hidden.css';
 import MapContainer from '../components/MapContainer';
-import {setPlaces} from "../store/actions/placesActions";
-import {connect} from "react-redux";
-import GroupMode from "../views/pages";
+import { setPlaces } from '../store/actions/placesActions';
+import { connect } from 'react-redux';
+import GroupMode from '../views/pages';
 
 class App extends Component {
-
   static getDerivedStateFromError(error) {
     console.log(error);
   }
@@ -45,47 +44,51 @@ class App extends Component {
 
     this.validator = new SimpleReactValidator({
       validators: {
-        google: {  // name the rule
+        google: {
+          // name the rule
           message: 'אנא הצמידו את האייטם למיקום במאגר שלנו או בגוגל',
           rule: (val, params, validator) => {
             return val ? true : false;
           },
-          required: true
-        }
+          required: true,
+        },
       },
       messages: {
-        required: 'יש למלא שדה זה'
-      }
-    });    
+        required: 'יש למלא שדה זה',
+      },
+    });
   }
 
-  setNew = (bool) => {
+  setNew = bool => {
     this.setState({ newItem: bool });
-  }
+  };
 
   // ---> 1. FIREBASE DB <---
   authListener() {
-    fireDB.auth().onAuthStateChanged((user) => {
+    fireDB.auth().onAuthStateChanged(user => {
       if (user) {
         this.setState({ user });
         localStorage.setItem('user', user.uid);
-      }
-      else {
+      } else {
         this.setState({ user: null });
         localStorage.removeItem('user');
       }
     });
   }
 
-  showPrev = (e) => {
+  showPrev = e => {
     e.preventDefault();
     this.hideEl('negative', true);
-    let temporaryList = this.state.previosIndexList;    
+    let temporaryList = this.state.previosIndexList;
     if (temporaryList.length > 0) {
       let previosElement = temporaryList.pop();
-      this.setState({ post: previosElement, previosIndexList: temporaryList, previosDatascore_id: this.state.text[previosElement].datastore_id });
+      this.setState({
+        post: previosElement,
+        previosIndexList: temporaryList,
+        previosDatascore_id: this.state.text[previosElement].datastore_id,
+      });
     }
-  }
+  };
 
   showNext = (post, e) => {
     e.preventDefault();
@@ -93,30 +96,32 @@ class App extends Component {
     let number = this.findNextUnsubmitedElement(post);
     if (number !== undefined) {
       temporaryList.push(post);
-      console.log("number: ", number);
-      console.log("post: ", post);
+      console.log('number: ', number);
+      console.log('post: ', post);
       this.setState({ post: number, previosIndexList: temporaryList });
     }
-  }
+  };
 
   toUndef = (post, e) => {
     e.preventDefault();
     let temporaryList = this.state.previosIndexList;
     temporaryList.push(post);
     this.setState({ post: undefined, previosIndexList: temporaryList });
-  }
+  };
 
-  findNextUnsubmitedElement = (post) => {
+  findNextUnsubmitedElement = post => {
     const { text } = this.state;
 
     for (let i = post + 1, size = Object.values(text).length; i < size; i++) {
-      if ((text[i].assigned_user === this.state.user.email)
-         && text[i].submission_time === null) {
-        console.log("###assigned-ok: ", i);
+      if (
+        text[i].assigned_user === this.state.user.email &&
+        text[i].submission_time === null
+      ) {
+        console.log('###assigned-ok: ', i);
         return i;
       }
     }
-  }
+  };
 
   //CSS methods
   showEl = (el, time, bool) => {
@@ -128,44 +133,56 @@ class App extends Component {
       current.scrollIntoView(true);
       setTimeout(this.hideEl, time, el, bool);
     }
-  }
+  };
   hideEl = (el, bool) => {
     try {
       document.getElementById(el).style.display = 'none';
-      if (bool)
-        document.getElementById('top').scrollIntoView(true);
+      if (bool) document.getElementById('top').scrollIntoView(true);
     } catch (err) {
+      //
     }
-  }
+  };
 
   getUserDataItems = () => {
     let data = [];
-    
-    this.state.text && this.state.text.map((item) => {
-      if (this.state.user && item.writer_username === this.state.user.email)
-        data.push(item);
-    });
+
+    this.state.text &&
+      this.state.text.map(item => {
+        if (this.state.user && item.writer_username === this.state.user.email)
+          data.push(item);
+      });
 
     this.setState({ userText: data });
-  }
+  };
 
   getDataItems = () => {
     this.authListener(); // <--- FIREBASE DB
     this.setState({ tableLoading: true });
     let headers = new Headers();
-    headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
+    headers.set(
+      'Authorization',
+      'Basic ' + btoa(gcp_config.username + ':' + gcp_config.password),
+    );
     fetch('https://roadio-master.appspot.com/v1/get_places?limit=-1')
       .then(response => response.json())
-      .then(placeData => this.setState({ placesList: placeData }, () => {
-        fetch('https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1', { method: 'GET', headers: headers, })
-          .then(response => response.json())
-          .then(data => {this.setState({ text: data.items, tableLoading: false }, () => {
-            // console.log('data item set finish');
-            this.getUserDataItems();
-            this.setState({ dbIsFull: true });
-          }); this.props.setPlaces(data.items)});
-      }));
-  }
+      .then(placeData =>
+        this.setState({ placesList: placeData }, () => {
+          fetch(
+            'https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1',
+            { method: 'GET', headers: headers },
+          )
+            .then(response => response.json())
+            .then(data => {
+              this.setState({ text: data.items, tableLoading: false }, () => {
+                // console.log('data item set finish');
+                this.getUserDataItems();
+                this.setState({ dbIsFull: true });
+              });
+              this.props.setPlaces(data.items);
+            });
+        }),
+      );
+  };
 
   // ---> 3. GCP <---
   componentDidMount() {
@@ -173,7 +190,6 @@ class App extends Component {
   }
 
   render() {
-    
     if (this.state.user) {
       const { post, text, previosIndexList, user, newItem } = this.state;
       let submitted = false;
@@ -183,45 +199,47 @@ class App extends Component {
         number = post;
       }
 
-      let isNextElementExist = this.findNextUnsubmitedElement(number) !== undefined;
-      const itemId = text[number] === undefined ? false : text[number].datastore_id;
+      let isNextElementExist =
+        this.findNextUnsubmitedElement(number) !== undefined;
+      const itemId =
+        text[number] === undefined ? false : text[number].datastore_id;
       let routes = undefined;
       if (text.length === 0) {
         //Loading
         routes = (
           <Router>
             <Route
-              render={() => {
-                return (
-                  <Top
-                    user={user.email}
-                    itemId={false}
-                    setNew={this.setNew}
-                  >
-                    <Message
-                      color="teal"
-                      icon="circle notched loading icon"
-                      text1="רק שניה"
-                      text2="מביאים לכם את התוכן"
-                    />
-                  </Top>
-                );
-              }}
+              render={() => (
+                <Top user={user.email} itemId={false} setNew={this.setNew}>
+                  <Message
+                    color="teal"
+                    icon="circle notched loading icon"
+                    text1="רק שניה"
+                    text2="מביאים לכם את התוכן"
+                  />
+                </Top>
+              )}
             />
           </Router>
         );
       } else if (this.state.newItem) {
         const routeRender = id => {
-          const item = this.state.text.find(q => q.datastore_id === parseInt(id));
+          const item = this.state.text.find(
+            q => q.datastore_id === parseInt(id),
+          );
           return (
             <Top user={user.email} itemId={false} setNew={this.setNew}>
-              {item ? <Heading heading={`Add item to ${item.question}`} /> : <Heading heading={"New item"} />}
+              {item ? (
+                <Heading heading={`Add item to ${item.question}`} />
+              ) : (
+                <Heading heading={'New item'} />
+              )}
               <NewForm
                 user={user.email}
                 post={{
                   place: null,
                   lat: undefined,
-                  lon: undefined
+                  lon: undefined,
                 }}
                 placesList={this.state.placesList}
                 setNew={this.setNew}
@@ -238,7 +256,7 @@ class App extends Component {
           <Router>
             <Switch>
               <Route
-                path={"/addNewItem/:parentId"}
+                path={'/addNewItem/:parentId'}
                 render={routeParams => {
                   console.log(routeParams);
                   const id = routeParams.match.params.parentId;
@@ -246,21 +264,25 @@ class App extends Component {
                 }}
               />
               <Route
-                path={"/addNewItem/"}
+                path={'/addNewItem/'}
                 render={routeParams => {
                   return routeRender();
                 }}
               />
-              <Route path={'/group-mode'}  render={routeParams => {
-                return <Top user={user.email} itemId={false} setNew={this.setNew}><GroupMode/></Top>;
-              }} />
+              <Route
+                path={'/group-mode'}
+                render={routeParams => {
+                  return (
+                    <Top user={user.email} itemId={false} setNew={this.setNew}>
+                      <GroupMode />
+                    </Top>
+                  );
+                }}
+              />
             </Switch>
           </Router>
         );
-      } else if (
-        post === undefined ||
-        (post === 0 && number === undefined)
-      ) {
+      } else if (post === undefined || (post === 0 && number === undefined)) {
         //All text submitted
         submitted = true;
         hideMessage = false;
@@ -270,24 +292,27 @@ class App extends Component {
         hideMessage = true;
         hideDiv = false;
       }
-      
+
       return (
         <div>
-          {routes ? routes : <Router>
-            <Switch>
+          {routes ? (
+            routes
+          ) : (
+            <Router>
+              <Switch>
                 <React.Fragment>
                   <Route
-                    path={"/:name"}
+                    path={'/:name'}
                     exact
                     strict
                     render={routeProps => {
-                      let string = "/" + routeProps.match.params.name;
+                      let string = '/' + routeProps.match.params.name;
                       let postExistanse = false;
                       if (
                         (number === undefined &&
                           Object.values(text).length > 0 &&
                           this.state.previosIndexList.length === 0) ||
-                        routeProps.history.action == "POP"
+                        routeProps.history.action == 'POP'
                       ) {
                         for (
                           let i = 0, size = Object.values(text).length;
@@ -295,8 +320,7 @@ class App extends Component {
                           i++
                         ) {
                           if (
-                            text[i].datastore_id ==
-                            routeProps.match.params.name
+                            text[i].datastore_id == routeProps.match.params.name
                           ) {
                             submitted = false;
                             hideMessage = true;
@@ -314,7 +338,7 @@ class App extends Component {
                             this.findNextUnsubmitedElement(
                               this.state.previosIndexList[
                                 this.state.previosIndexList.length - 1
-                              ]
+                              ],
                             ) === number
                           ) &&
                           this.state.previosDatascore_id !=
@@ -337,12 +361,11 @@ class App extends Component {
                           }
                         }
 
-                        string = "/" + text[number].datastore_id;
+                        string = '/' + text[number].datastore_id;
                       }
                       isNextElementExist =
-                        this.findNextUnsubmitedElement(number) !==
-                        undefined;
-                      if (!hideMessage) string = "/";
+                        this.findNextUnsubmitedElement(number) !== undefined;
+                      if (!hideMessage) string = '/';
                       return (
                         <Top
                           user={user.email}
@@ -352,16 +375,16 @@ class App extends Component {
                           <Redirect to={string} />
                           {/* <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
                       text1='מצטערים' text2='כל הפוסטים כבר נבדקו' /> */}
-                          <div className={hideDiv ? "hidden" : ""}>
+                          <div className={hideDiv ? 'hidden' : ''}>
                             <Text
                               text={
                                 text[number] &&
                                 text[number].raw_text &&
                                 !hideDiv
                                   ? text[number].raw_text
-                                  : ""
+                                  : ''
                               }
-                              heading={hideDiv ? "" : text[number].place}
+                              heading={hideDiv ? '' : text[number].place}
                             />
                           </div>
 
@@ -370,13 +393,11 @@ class App extends Component {
                             showPrev={this.showPrev}
                             showNext={this.showNext}
                             showEl={this.showEl}
-                            numberOfPreviousElemnts={
-                              previosIndexList.length
-                            }
+                            numberOfPreviousElemnts={previosIndexList.length}
                             nextElementExistanse={isNextElementExist}
                             toUndef={this.toUndef}
-                            post={submitted ? "" : text[number]}
-                            user={submitted ? "" : user.email}
+                            post={submitted ? '' : text[number]}
+                            user={submitted ? '' : user.email}
                             submitted={submitted}
                             placesList={this.state.placesList}
                             validator={this.validator}
@@ -387,13 +408,13 @@ class App extends Component {
                     }}
                   />
                   <Route
-                    path={"/"}
+                    path={'/'}
                     exact
                     render={routeProps => {
                       let string =
-                        "/" +
+                        '/' +
                         (text[number] === undefined
-                          ? ""
+                          ? ''
                           : text[number].datastore_id);
 
                       return (
@@ -403,16 +424,16 @@ class App extends Component {
                           setNew={() => this.setNew(true)}
                         >
                           <Redirect to={string} />
-                          <div className={hideDiv ? "hidden" : ""}>
+                          <div className={hideDiv ? 'hidden' : ''}>
                             <Text
                               text={
                                 text[number] &&
                                 text[number].raw_text &&
                                 !hideDiv
                                   ? text[number].raw_text
-                                  : ""
+                                  : ''
                               }
-                              heading={hideDiv ? "" : text[number].place}
+                              heading={hideDiv ? '' : text[number].place}
                             />
                           </div>
 
@@ -432,13 +453,11 @@ class App extends Component {
                             showPrev={this.showPrev}
                             showNext={this.showNext}
                             showEl={this.showEl}
-                            numberOfPreviousElemnts={
-                              previosIndexList.length
-                            }
+                            numberOfPreviousElemnts={previosIndexList.length}
                             nextElementExistanse={isNextElementExist}
                             toUndef={this.toUndef}
-                            post={submitted ? "" : text[number]}
-                            user={submitted ? "" : user.email}
+                            post={submitted ? '' : text[number]}
+                            user={submitted ? '' : user.email}
                             submitted={submitted}
                             placesList={this.state.placesList}
                             validator={this.validator}
@@ -449,21 +468,24 @@ class App extends Component {
                     }}
                   />
                 </React.Fragment>
-            </Switch>
-          </Router>}
+              </Switch>
+            </Router>
+          )}
         </div>
       );
-    }
-    else {
+    } else {
       return (
         <Login
           showEl={this.showEl}
           hideEl={this.hideEl}
           getDataItems={() => this.getDataItems()}
         />
-      )
+      );
     }
   }
 }
 
-export default connect(null, {setPlaces})(App);
+export default connect(
+  null,
+  { setPlaces },
+)(App);

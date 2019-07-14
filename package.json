@@ -35,6 +35,15 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "deploy": "surge --domain trite-news.surge.sh"
+    "deploy": "surge --domain trite-news.surge.sh",
+    "lint": "./node_modules/.bin/eslint src",
+    "lint-fixup": "./node_modules/.bin/eslint src --ext .js,.jsx --fix"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^10.0.2",
+    "eslint": "^6.0.1",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-react": "^7.14.2"
   }
 }
