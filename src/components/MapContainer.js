@@ -10,7 +10,7 @@ import {
   withGoogleMap,
   GoogleMap,
   Marker,
-    Circle
+  Circle
 } from "react-google-maps";
 import { InfoWindow } from "react-google-maps";
 import { SearchBox } from "react-google-maps/lib/components/places/SearchBox";
@@ -44,22 +44,22 @@ const MapContainer = compose(
       const refs = {};
       const formState = this.props.isFormMap
         ? {
-            center:
-              this.props.post.lat === undefined
-                ? { lat: 39, lng: 16 }
-                : {
-                    lat: parseFloat(this.props.post.lat),
-                    lng: parseFloat(this.props.post.lon)
-                  },
-            currentPlace:
-              this.props.post.place === null
-                ? { place_name: "", lat: undefined, lon: undefined }
-                : {
-                    place_name: this.props.post.place,
-                    lat: this.props.post.lat,
-                    lon: this.props.post.lon
-                  }
-          }
+          center:
+            this.props.post.lat === undefined
+              ? { lat: 39, lng: 16 }
+              : {
+                lat: parseFloat(this.props.post.lat),
+                lng: parseFloat(this.props.post.lon)
+              },
+          currentPlace:
+            this.props.post.place === null
+              ? { place_name: "", lat: undefined, lon: undefined }
+              : {
+                place_name: this.props.post.place,
+                lat: this.props.post.lat,
+                lon: this.props.post.lon
+              }
+        }
         : null;
 
       this.setState({
@@ -376,7 +376,9 @@ const MapContainer = compose(
     componentDidUpdate(prevProps) {
       console.log("update passed!");
       if (this.props === prevProps) return;
-      console.log("update prev passed!");
+      console.log("cur passed!", this.props);
+      console.log("pre passed!", prevProps);
+
       // this.getQuestionMarkers(); It's too hard call, moved to componentDidMount
       // console.log(this.props.placesList);
       if (this.props.isFormMap && this.props.changed) {
@@ -408,13 +410,19 @@ const MapContainer = compose(
         }
       }
     },
+    shouldComponentUpdate(nextProps, nextState) {
+      if (this.props.updateQuestion == nextProps.updateQuestion) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     componentWillReceiveProps(nextProps) {
-      console.log("recev passed!");
+      console.log("recev passed!", this.props);
       if (this.props.data === nextProps.data) return;
     },
     getQuestionMarkers() {
       let questionMarkers = [];
-
       this.props.data.map((item, index) => {
         if (
           item.labels.length <= 0 ||
@@ -471,14 +479,14 @@ const MapContainer = compose(
               <Circle center={{
                 lat: parseFloat(marker.position.lat()),
                 lng: parseFloat(marker.position.lng())
-              }} radius={marker.radius || 500} defaultOptions={{fillColor: '#42A5F5', strokeColor: '#1565C0', strokeWeight: 1}} fillColor={'#4CAF50'} />
+              }} radius={marker.radius || 500} defaultOptions={{ fillColor: '#42A5F5', strokeColor: '#1565C0', strokeWeight: 1 }} fillColor={'#4CAF50'} />
               <Marker
                 key={index}
                 position={marker.position}
                 draggable={true}
                 ref={marker.ref}
                 onPositionChanged={() => props.updatePlaces(marker.ref, index)}
-                // ref={props.onMarkerMounted}
+              // ref={props.onMarkerMounted}
               >
                 <InfoWindow>
                   <div>{index}</div>
@@ -604,10 +612,10 @@ const MapContainer = compose(
             let radius = marker.radius || 500;
             return <div key={`marker${index}`}>
               <Icon name={"plus"} onClick={() => props.updateRadius(index, (radius + 100))} />
-              <input type={"number"} value={radius} style={{width: "60px"}}
-              onChange={(e) => {
-                props.updateRadius(index, parseInt(e.target.value))
-              }}/>
+              <input type={"number"} value={radius} style={{ width: "60px" }}
+                onChange={(e) => {
+                  props.updateRadius(index, parseInt(e.target.value))
+                }} />
               <Icon name={"minus"} onClick={() => props.updateRadius(index, (radius - 100))} />
               {index} {"נעץ"}{" "}
               {props.markers.length > 1 && (

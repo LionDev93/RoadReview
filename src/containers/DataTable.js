@@ -59,7 +59,6 @@ class DataTable extends Component {
   render() {
     const { data } = this.state;
     const fullTable = this.props.fullTable;
-    console.log(data);
     return (
       <div style={{ textAlign: "right", direction: "rtl" }}>
         <ReactTable
@@ -160,8 +159,8 @@ class DataTable extends Component {
                       ? <p>{moment(row.last_modified).format("YYYY/MM/DD")}</p>
                       : ""}
                     {row.last_modified
-                        ? <p>{moment(row.last_modified).format("HH:mm:ss")}</p>
-                        : ""}
+                      ? <p>{moment(row.last_modified).format("HH:mm:ss")}</p>
+                      : ""}
                   </div>
                 );
               },

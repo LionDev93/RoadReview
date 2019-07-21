@@ -25,7 +25,8 @@ class Survey extends Component {
       changed: false,
       changedForMap: false,
       showModal: false,
-      errorMsg: ''
+      errorMsg: '',
+      questionChanged: false,
     }; // <- set up react state
   }
 
@@ -45,7 +46,7 @@ class Survey extends Component {
   readAllChunks = (readableStream) => {
     const reader = readableStream.getReader();
     const chunks = [];
-   
+
     function pump() {
       return reader.read().then(({ value, done }) => {
         if (done) {
@@ -55,7 +56,7 @@ class Survey extends Component {
         return pump();
       });
     }
-   
+
     return pump();
   }
 
@@ -86,7 +87,7 @@ class Survey extends Component {
 
     let right = getIfNotNull(change, 'right_answer');
     let index = change.answers.indexOf(right);
-    if (index !== -1){
+    if (index !== -1) {
       change.answers.splice(index, 1);
     }
 
@@ -135,7 +136,8 @@ class Survey extends Component {
 
 
   addToAnswer = (answers) => {
-    this.setState({ answers: answers });
+    console.log('edit answers', answers);
+    this.setState({ answers: answers, questionChanged: true });
   }
 
 
@@ -146,7 +148,7 @@ class Survey extends Component {
     const { showEl } = this.props;
 
     e.preventDefault(); // <- prevent form submit from reloading the page
-   
+
     let copy = Object.assign({}, answers);
     copy.submission_time = new Date().toLocaleString("en-US");
 
@@ -226,21 +228,24 @@ class Survey extends Component {
       headers: headers,
       body: toDB
     })
-    .then(res => {
-      console.log('Status: ', res.status);
-      if (res.status === 500) {
-        this.setState({ showModal: true });
-        return this.readAllChunks(res.body);
-      }
-      this.addToPreviousAnswers(answers);
+      .then(res => {
+        console.log('Update Status: ', res.status);
+        if (res.status === 500) {
+          this.setState({ showModal: true });
+          return this.readAllChunks(res.body);
+        }
 
-      document.getElementById("form").reset(); // <- clear the input
-      this.showNextItems(e, postNum);
-    })
-    .then(chunks => {
-      chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
-    })
-    .catch(error => console.error('Error: ', error));
+        this.props.updateDataItems(JSON.parse(toDB));
+
+        this.addToPreviousAnswers(answers);
+
+        document.getElementById("form").reset(); // <- clear the input
+        this.showNextItems(e, postNum);
+      })
+      .then(chunks => {
+        chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
+      })
+      .catch(error => console.error('Error: ', error));
   }
 
   showNextItems = (e, postNum) => {
@@ -277,8 +282,8 @@ class Survey extends Component {
   static getDerivedStateFromProps(props, state) {
     // console.log("DELIVER ANSWERS: ", state.answers);
 
-    if(state.answers && state.answers.datastore_id !== props.post.datastore_id){
-      return { answers: props.submitted ? '' : state.setNewFields(props.post), changedForMap: true};
+    if (state.answers && state.answers.datastore_id !== props.post.datastore_id) {
+      return { answers: props.submitted ? '' : state.setNewFields(props.post), changedForMap: true };
     }
     if (state.changed) {
       return { answers: props.submitted ? '' : state.setNewFields(props.post), changed: false };
@@ -286,7 +291,7 @@ class Survey extends Component {
   }
 
   removeQuestion = () => {
-    const { post: {datastore_id}} = this.props;
+    const { post: { datastore_id } } = this.props;
     let headers = new Headers();
     headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
     headers.set('Accept', 'application/json');
@@ -295,16 +300,16 @@ class Survey extends Component {
       method: 'GET',
       headers: headers,
     }).then(res => {
-      const {history} = this.props;
+      const { history } = this.props;
       history.push("/");
-    }).catch(err => {});
+    }).catch(err => { });
   };
 
   render() {
 
     const { answers } = this.state;
     const { postNum, numberOfPreviousElemnts, submitted } = this.props;
-    
+
     return submitted ? (
       <button className={numberOfPreviousElemnts > 0 ?
         'ui labeled icon violet basic massive button disabled' : 'ui labeled icon grey basic massive button disabled'}
@@ -327,6 +332,7 @@ class Survey extends Component {
             data={this.props.data}
             isNewForm={false}
             removeQuestion={this.removeQuestion}
+            questionChanged={this.state.questionChanged}
           />
 
           <ErrorModal

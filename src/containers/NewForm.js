@@ -4,7 +4,7 @@ import gcp_config from '../GCP_configs';
 import SurveyQuestions from '../components/SurveyQuestions';
 import ErrorModal from '../components/ErrorModal';
 import fetchStream from 'fetch-readablestream';
-import {Redirect} from "react-router-dom";
+import { Redirect } from "react-router-dom";
 class NewForm extends Component {
 
   constructor(props) {
@@ -114,6 +114,7 @@ class NewForm extends Component {
 
 
   addToAnswer = (answers) => {
+    console.log('new form', answers);
     this.setState({ answers: answers });
   }
 
@@ -186,11 +187,11 @@ class NewForm extends Component {
       }
     } return pushThere;
   }
-  
+
   readAllChunks = (readableStream) => {
     const reader = readableStream.getReader();
     const chunks = [];
-   
+
     function pump() {
       return reader.read().then(({ value, done }) => {
         if (done) {
@@ -200,7 +201,7 @@ class NewForm extends Component {
         return pump();
       });
     }
-   
+
     return pump();
   }
 
@@ -211,7 +212,7 @@ class NewForm extends Component {
     } else {
       data = this.processPlace(this.processCheck(data));
 
-      let headers = new Headers();      
+      let headers = new Headers();
       headers.set('Authorization', 'Basic ' + btoa(gcp_config.username + ":" + gcp_config.password));
       headers.set('Accept', 'application/json');
       headers.set('Content-Type', 'application/json');
@@ -223,30 +224,62 @@ class NewForm extends Component {
       }
       const toDB = JSON.stringify({ item: data });
       console.log("SAVE NEW ITEM: ", toDB);
-  
-      fetchStream('https://roadio-master.appspot.com/v1/edit_item', {
+
+      fetch('https://roadio-master.appspot.com/v1/edit_item', {
         method: 'POST',
         headers: headers,
         body: toDB
       })
-      .then(res => {
-        console.log('Status: ', res.status);        
-        if (res.status === 500) {
-          this.setState({ showModal: true });
-          return this.readAllChunks(res.body);
+        .then(res => res.json())
+        .then(res => {
+
+          console.log('edit data', JSON.parse(toDB).item);
+          if (res.status === 500) {
+            this.setState({ showModal: true });
+            return this.readAllChunks(res.body);
+          }
+          // this.props.getDataItems();
+          console.log('edit item is', this.state.answers);
+          this.showEl('success', () => { this.props.setNew(false) });
+          if (this.props.parentId) {
+            this.setState({
+              childWasSaved: true
+            })
+          }
+
+          this.props.insertDataItems({ ...JSON.parse(toDB).item, datastore_id: res, original_id: res })
         }
-        this.props.getDataItems();
-        this.showEl('success', () => { this.props.setNew(false) });
-        if (this.props.parentId) {
-          this.setState({
-            childWasSaved: true
-          })
-        }
-      })
-      .then(chunks => {        
-        chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
-      })
-      .catch(error => console.error('Error: ', error));
+        )
+        .catch(error => console.error('Error: ', error));
+
+      //   fetchStream('https://roadio-master.appspot.com/v1/edit_item', {
+      //     method: 'POST',
+      //     headers: headers,
+      //     body: toDB
+      //   })
+      //     .then(res => {
+
+
+      //       console.log('res', res);
+
+      //       if (res.status === 500) {
+      //         this.setState({ showModal: true });
+      //         return this.readAllChunks(res.body);
+      //       }
+      //       // this.props.getDataItems();
+      //       console.log('edit item is', this.state.answers);
+      //       this.showEl('success', () => { this.props.setNew(false) });
+      //       if (this.props.parentId) {
+      //         this.setState({
+      //           childWasSaved: true
+      //         })
+      //       }
+      //     })
+      //     .then(chunks => {
+      //       chunks && this.setState({ errorMsg: String.fromCharCode.apply(null, chunks[0]) });
+      //       console.log('chunks', chunks);
+      //     })
+      //     .catch(error => console.error('Error: ', error));
     }
   }
 
@@ -258,8 +291,8 @@ class NewForm extends Component {
     return answers;
   }
 
-  processPlace= (answers) => {
-    if(answers.place === ''){
+  processPlace = (answers) => {
+    if (answers.place === '') {
       answers.place = null;
       delete answers.lon;
       delete answers.lat;
@@ -268,14 +301,14 @@ class NewForm extends Component {
   }
 
 
-  showEl = (id, func='') => {
+  showEl = (id, func = '') => {
     const current = document.getElementById(id);
     const move = this.moveToTop;
     if (current.style.display === 'none') {
       current.style.display = 'block';
       current.scrollIntoView(true);
       setTimeout(() => {
-        func(); 
+        func();
         move();  // move to top
       }, 1000);
     }
@@ -293,28 +326,28 @@ class NewForm extends Component {
     }
     return (
       <div>
-          <SurveyQuestions
-            answers={this.state.answers}
-            placesList={this.props.placesList}
-            changed={this.state.changedForMap}
-            changeToFalse={this.changeToFalse}
-            addToAnswer={this.addToAnswer}
-            post={this.props.post}
-            data={this.props.data}
-            validator={this.props.validator}
-            isNewForm={true}
-            changeParentId={(number, e) => {
-              console.log(e.target.value);
-              this.setState({parentId: e.target.value});
-            }}
-            parentId={this.state.parentId}
-          />
-          <ErrorModal
-            text={this.state.errorMsg}
-            showModal={this.state.showModal}
-            handleCloseModal={this.handleCloseErrorMsg}
-          />
-          
+        <SurveyQuestions
+          answers={this.state.answers}
+          placesList={this.props.placesList}
+          changed={this.state.changedForMap}
+          changeToFalse={this.changeToFalse}
+          addToAnswer={this.addToAnswer}
+          post={this.props.post}
+          data={this.props.data}
+          validator={this.props.validator}
+          isNewForm={true}
+          changeParentId={(number, e) => {
+            console.log(e.target.value);
+            this.setState({ parentId: e.target.value });
+          }}
+          parentId={this.state.parentId}
+        />
+        <ErrorModal
+          text={this.state.errorMsg}
+          showModal={this.state.showModal}
+          handleCloseModal={this.handleCloseErrorMsg}
+        />
+
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
