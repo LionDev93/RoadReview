@@ -19,7 +19,8 @@ import '../css/Hidden.css';
 import MapContainer from '../components/MapContainer';
 import { setPlaces } from '../store/actions/placesActions';
 import { connect } from 'react-redux';
-import GroupMode from '../views/pages';
+// import GroupMode from '../views/pages';
+import GroupMode from '../containers/GroupMode';
 
 class App extends Component {
   static getDerivedStateFromError(error) {
@@ -40,7 +41,7 @@ class App extends Component {
       newItem: false,
       dbIsFull: false,
       tableLoading: false,
-      params: ''
+      params: '',
     }; // <- set up react state
 
     this.validator = new SimpleReactValidator({
@@ -168,55 +169,56 @@ class App extends Component {
       .then(response => response.json())
       .then(placeData =>
         this.setState({ placesList: placeData }, () => {
+          let params = window.location.href.split('/#/')[1];
 
-          let params = window.location.href.split('/#/')[1]; 
-
-          typeof(parseInt(params)) == 'number' && parseInt(params) > 0 ? 
-            fetch(
-              'https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&datastore_id='+parseInt(params),
-              { method: 'GET', headers: headers },
-            )
-              .then(response => response.json())
-              .then(data => {
-                console.log('edit api call', data.items.length);
-                this.setState({ text: data.items, tableLoading: false }, () => {
-                  this.getUserDataItems();
-                  this.setState({ dbIsFull: true });
+          typeof parseInt(params) == 'number' && parseInt(params) > 0
+            ? fetch(
+                'https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&datastore_id=' +
+                  parseInt(params),
+                { method: 'GET', headers: headers },
+              )
+                .then(response => response.json())
+                .then(data => {
+                  console.log('edit api call', data.items.length);
+                  this.setState(
+                    { text: data.items, tableLoading: false },
+                    () => {
+                      this.getUserDataItems();
+                      this.setState({ dbIsFull: true });
+                    },
+                  );
+                  this.props.setPlaces(data.items);
+                })
+            : fetch(
+                'https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1',
+                { method: 'GET', headers: headers },
+              )
+                .then(response => response.json())
+                .then(data => {
+                  console.log('api call', data.items.length);
+                  this.setState(
+                    { text: data.items, tableLoading: false },
+                    () => {
+                      this.getUserDataItems();
+                      this.setState({ dbIsFull: true });
+                    },
+                  );
+                  this.props.setPlaces(data.items);
                 });
-                this.props.setPlaces(data.items);
-              })
-          :
-            fetch(
-              'https://roadio-master.appspot.com/v1/get_user_items?user_id=management_user&limit=-1',
-              { method: 'GET', headers: headers },
-            )
-              .then(response => response.json())
-              .then(data => {
-                console.log('api call', data.items.length);
-                this.setState({ text: data.items, tableLoading: false }, () => {
-                  this.getUserDataItems();
-                  this.setState({ dbIsFull: true });
-                });
-                this.props.setPlaces(data.items);
-              })
-
-
         }),
       );
   };
 
-  insertDataItems = (newItem) => {
+  insertDataItems = newItem => {
     let length = this.state.userText.length;
 
     this.setState(prevState => ({
       userText: [...prevState.userText, newItem],
-      text: [...prevState.userText, newItem]
-    }))
+      text: [...prevState.userText, newItem],
+    }));
+  };
 
-  }
-
-  updateDataItems = (updateItem) => {
-
+  updateDataItems = updateItem => {
     this.setState(state => {
       const userText = state.userText.map((item, j) => {
         if (updateItem.item.datastore_id == item.datastore_id) {
@@ -230,7 +232,6 @@ class App extends Component {
         userText,
       };
     });
-
   };
 
   // ---> 3. GCP <---
@@ -281,8 +282,8 @@ class App extends Component {
               {item ? (
                 <Heading heading={`Add item to ${item.question}`} />
               ) : (
-                  <Heading heading={'New item'} />
-                )}
+                <Heading heading={'New item'} />
+              )}
               <NewForm
                 user={user.email}
                 post={{
@@ -347,22 +348,52 @@ class App extends Component {
           {routes ? (
             routes
           ) : (
-              <Router>
-                <Switch>
-                  <React.Fragment>
-                    <Route
-                      path={'/:name'}
-                      exact
-                      strict
-                      render={routeProps => {
-                        let string = '/' + routeProps.match.params.name;
-                        
-                        let postExistanse = false;
+            <Router>
+              <Switch>
+                <React.Fragment>
+                  <Route
+                    path={'/:name'}
+                    exact
+                    strict
+                    render={routeProps => {
+                      let string = '/' + routeProps.match.params.name;
+
+                      let postExistanse = false;
+                      if (
+                        (number === undefined &&
+                          Object.values(text).length > 0 &&
+                          this.state.previosIndexList.length === 0) ||
+                        routeProps.history.action == 'POP'
+                      ) {
+                        for (
+                          let i = 0, size = Object.values(text).length;
+                          i < size;
+                          i++
+                        ) {
+                          if (
+                            text[i].datastore_id == routeProps.match.params.name
+                          ) {
+                            submitted = false;
+                            hideMessage = true;
+                            hideDiv = false;
+                            postExistanse = true;
+                            number = i;
+                            break;
+                          }
+                        }
+                      }
+                      if (itemId) {
                         if (
-                          (number === undefined &&
-                            Object.values(text).length > 0 &&
-                            this.state.previosIndexList.length === 0) ||
-                          routeProps.history.action == 'POP'
+                          !(
+                            this.state.previosIndexList.length > 0 &&
+                            this.findNextUnsubmitedElement(
+                              this.state.previosIndexList[
+                                this.state.previosIndexList.length - 1
+                              ],
+                            ) === number
+                          ) &&
+                          this.state.previosDatascore_id !=
+                            text[number].datastore_id
                         ) {
                           for (
                             let i = 0, size = Object.values(text).length;
@@ -370,161 +401,131 @@ class App extends Component {
                             i++
                           ) {
                             if (
-                              text[i].datastore_id == routeProps.match.params.name
+                              text[i].datastore_id ==
+                              routeProps.match.params.name
                             ) {
                               submitted = false;
-                              hideMessage = true;
-                              hideDiv = false;
                               postExistanse = true;
                               number = i;
                               break;
                             }
                           }
                         }
-                        if (itemId) {
-                          if (
-                            !(
-                              this.state.previosIndexList.length > 0 &&
-                              this.findNextUnsubmitedElement(
-                                this.state.previosIndexList[
-                                this.state.previosIndexList.length - 1
-                                ],
-                              ) === number
-                            ) &&
-                            this.state.previosDatascore_id !=
-                            text[number].datastore_id
-                          ) {
-                            for (
-                              let i = 0, size = Object.values(text).length;
-                              i < size;
-                              i++
-                            ) {
-                              if (
-                                text[i].datastore_id ==
-                                routeProps.match.params.name
-                              ) {
-                                submitted = false;
-                                postExistanse = true;
-                                number = i;
-                                break;
-                              }
-                            }
-                          }
 
-                          string = '/' + text[number].datastore_id;
-                        }
-                        isNextElementExist =
-                          this.findNextUnsubmitedElement(number) !== undefined;
-                        if (!hideMessage) string = '/';
-                        return (
-                          <Top
-                            user={user.email}
-                            itemId={itemId}
-                            setNew={this.setNew}
-                          >
-                            <Redirect to={string} />
-                            {/* <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
+                        string = '/' + text[number].datastore_id;
+                      }
+                      isNextElementExist =
+                        this.findNextUnsubmitedElement(number) !== undefined;
+                      if (!hideMessage) string = '/';
+                      return (
+                        <Top
+                          user={user.email}
+                          itemId={itemId}
+                          setNew={this.setNew}
+                        >
+                          <Redirect to={string} />
+                          {/* <Message className={hideMessage ? 'hidden' : ''} color='green' icon='check icon'
                       text1='מצטערים' text2='כל הפוסטים כבר נבדקו' /> */}
-                            <div className={hideDiv ? 'hidden' : ''}>
-                              <Text
-                                text={
-                                  text[number] &&
-                                    text[number].raw_text &&
-                                    !hideDiv
-                                    ? text[number].raw_text
-                                    : ''
-                                }
-                                heading={hideDiv ? '' : text[number].place}
-                              />
-                            </div>
-
-                            <Survey
-                              postNum={number}
-                              showPrev={this.showPrev}
-                              showNext={this.showNext}
-                              showEl={this.showEl}
-                              numberOfPreviousElemnts={previosIndexList.length}
-                              nextElementExistanse={isNextElementExist}
-                              toUndef={this.toUndef}
-                              post={submitted ? '' : text[number]}
-                              user={submitted ? '' : user.email}
-                              submitted={submitted}
-                              placesList={this.state.placesList}
-                              validator={this.validator}
-                              data={this.state.text}
-                              updateDataItems={this.updateDataItems}
-                              params={routeProps.match.params.name}
+                          <div className={hideDiv ? 'hidden' : ''}>
+                            <Text
+                              text={
+                                text[number] &&
+                                text[number].raw_text &&
+                                !hideDiv
+                                  ? text[number].raw_text
+                                  : ''
+                              }
+                              heading={hideDiv ? '' : text[number].place}
                             />
-                          </Top>
-                        );
-                      }}
-                    />
-                    <Route
-                      path={'/'}
-                      exact
-                      render={routeProps => {
-                        let string =
-                          '/' +
-                          (text[number] === undefined
-                            ? ''
-                            : text[number].datastore_id);
+                          </div>
 
-                        return (
-                          <Top
-                            user={user.email}
-                            itemId={itemId}
-                            setNew={() => this.setNew(true)}
-                          >
-                            <Redirect to={string} />
-                            <div className={hideDiv ? 'hidden' : ''}>
-                              <Text
-                                text={
-                                  text[number] &&
-                                    text[number].raw_text &&
-                                    !hideDiv
-                                    ? text[number].raw_text
-                                    : ''
-                                }
-                                heading={hideDiv ? '' : text[number].place}
-                              />
-                            </div>
+                          <Survey
+                            postNum={number}
+                            showPrev={this.showPrev}
+                            showNext={this.showNext}
+                            showEl={this.showEl}
+                            numberOfPreviousElemnts={previosIndexList.length}
+                            nextElementExistanse={isNextElementExist}
+                            toUndef={this.toUndef}
+                            post={submitted ? '' : text[number]}
+                            user={submitted ? '' : user.email}
+                            submitted={submitted}
+                            placesList={this.state.placesList}
+                            validator={this.validator}
+                            data={this.state.text}
+                            updateDataItems={this.updateDataItems}
+                            params={routeProps.match.params.name}
+                          />
+                        </Top>
+                      );
+                    }}
+                  />
+                  <Route
+                    path={'/'}
+                    exact
+                    render={routeProps => {
+                      let string =
+                        '/' +
+                        (text[number] === undefined
+                          ? ''
+                          : text[number].datastore_id);
 
-                            <DataTable
-                              data={this.state.userText}
-                              tableLoading={this.state.tableLoading}
-                              setNew={this.setNew}
-                              fullTable={text}
+                      return (
+                        <Top
+                          user={user.email}
+                          itemId={itemId}
+                          setNew={() => this.setNew(true)}
+                        >
+                          <Redirect to={string} />
+                          <div className={hideDiv ? 'hidden' : ''}>
+                            <Text
+                              text={
+                                text[number] &&
+                                text[number].raw_text &&
+                                !hideDiv
+                                  ? text[number].raw_text
+                                  : ''
+                              }
+                              heading={hideDiv ? '' : text[number].place}
                             />
+                          </div>
 
-                            <MapContainer
-                              data={this.state.userText}
-                              isFormMap={false}
-                            />
-                            <Survey
-                              postNum={number}
-                              showPrev={this.showPrev}
-                              showNext={this.showNext}
-                              showEl={this.showEl}
-                              numberOfPreviousElemnts={previosIndexList.length}
-                              nextElementExistanse={isNextElementExist}
-                              toUndef={this.toUndef}
-                              post={submitted ? '' : text[number]}
-                              user={submitted ? '' : user.email}
-                              submitted={submitted}
-                              placesList={this.state.placesList}
-                              validator={this.validator}
-                              data={this.state.text}
-                              updateDataItems={this.updateDataItems}
-                              params={routeProps.match.params.name}
-                            />
-                          </Top>
-                        );
-                      }}
-                    />
-                  </React.Fragment>
-                </Switch>
-              </Router>
-            )}
+                          <DataTable
+                            data={this.state.userText}
+                            tableLoading={this.state.tableLoading}
+                            setNew={this.setNew}
+                            fullTable={text}
+                          />
+
+                          <MapContainer
+                            data={this.state.userText}
+                            isFormMap={false}
+                          />
+                          <Survey
+                            postNum={number}
+                            showPrev={this.showPrev}
+                            showNext={this.showNext}
+                            showEl={this.showEl}
+                            numberOfPreviousElemnts={previosIndexList.length}
+                            nextElementExistanse={isNextElementExist}
+                            toUndef={this.toUndef}
+                            post={submitted ? '' : text[number]}
+                            user={submitted ? '' : user.email}
+                            submitted={submitted}
+                            placesList={this.state.placesList}
+                            validator={this.validator}
+                            data={this.state.text}
+                            updateDataItems={this.updateDataItems}
+                            params={routeProps.match.params.name}
+                          />
+                        </Top>
+                      );
+                    }}
+                  />
+                </React.Fragment>
+              </Switch>
+            </Router>
+          )}
         </div>
       );
     } else {
