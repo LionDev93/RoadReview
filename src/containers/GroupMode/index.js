@@ -78,6 +78,18 @@ class GroupMode extends Component {
     this.setState({ questionArray: this.state.questionArray });
   };
 
+  handleEditQuestionChild = e => {
+    this.state.questionArray[this.state.selectedIndex].related[0].question =
+      e.target.value;
+    this.setState({ questionArray: this.state.questionArray });
+  };
+
+  handleEditStoryChild = e => {
+    this.state.questionArray[this.state.selectedIndex].related[0].story =
+      e.target.value;
+    this.setState({ questionArray: this.state.questionArray });
+  };
+
   handleLoad = () => {
     this.setState({ selectedIndex: -1 }, function() {
       this.getGroup();
@@ -189,6 +201,12 @@ class GroupMode extends Component {
     });
   };
 
+  handleRemoveChild = () => {
+    const { questionArray, selectedIndex } = this.state;
+    questionArray[selectedIndex].related.splice(0, 1);
+    this.setState({ questionArray: questionArray });
+  };
+
   render() {
     const { classes } = this.props;
     const {
@@ -200,7 +218,7 @@ class GroupMode extends Component {
       selectedIndex,
     } = this.state;
     return (
-      <div style={{ padding: 8 }}>
+      <Grid style={{ padding: 8 }}>
         <Grid container>
           <Grid item xs={12} sm={5}>
             <TextField
@@ -309,6 +327,47 @@ class GroupMode extends Component {
                     onChange={this.handleEditStory}
                   />
                 </Grid>
+                {questionArray[selectedIndex].related.length > 0 && (
+                  <div>
+                    <Grid item xs={12}>
+                      Child:
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        onClick={this.handleRemoveChild}
+                      >
+                        Remove
+                      </Button>
+                    </Grid>
+                    <Grid item xs={12} style={{ paddingRight: 8 }}>
+                      <TextField
+                        label="Question"
+                        placeholder="..."
+                        className={classes.textField}
+                        style={{ marginLeft: 0 }}
+                        margin="normal"
+                        value={questionArray[selectedIndex].related[0].question}
+                        multiline
+                        fullWidth
+                        onChange={this.handleEditQuestionChild}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Story"
+                        placeholder="..."
+                        className={classes.textField}
+                        style={{ marginLeft: 0 }}
+                        margin="normal"
+                        value={questionArray[selectedIndex].related[0].story}
+                        multiline
+                        fullWidth
+                        onChange={this.handleEditStoryChild}
+                      />
+                    </Grid>
+                  </div>
+                )}
               </Grid>
             )}
           </Grid>
@@ -375,12 +434,25 @@ class GroupMode extends Component {
                     <Grid item xs={12} sm={8}>
                       {item.story}
                     </Grid>
+                    {item.related.length > 0 && (
+                      <Grid item xs={12} container>
+                        <Grid item xs={12}>
+                          Child:
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          {item.related[0].question}
+                        </Grid>
+                        <Grid item xs={12} sm={8}>
+                          {item.related[0].story}
+                        </Grid>
+                      </Grid>
+                    )}
                   </Grid>
                 </div>
               );
             }
           })}
-      </div>
+      </Grid>
     );
   }
 }
