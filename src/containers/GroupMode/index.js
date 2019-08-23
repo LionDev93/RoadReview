@@ -22,6 +22,7 @@ import {
   getGroup,
   clearGroupPlaces,
 } from '../../store/actions/placesActions';
+import { Checkbox } from '@material-ui/core';
 
 const styles = theme => ({
   card: {
@@ -50,13 +51,14 @@ class GroupMode extends Component {
     this.state = {
       groupName: '',
       lat: '',
-      lon: '',
+      lng: '',
       radius: '',
-      questionArray: null,
+      questionArray: [],
 
       selectedIndex: -1,
 
       isLoaded: false,
+      isMapForLat: true,
     };
   }
 
@@ -98,10 +100,10 @@ class GroupMode extends Component {
 
   getGroup = () => {
     const { getGroup } = this.props;
-    const { lat, lon, radius, groupName } = this.state;
+    const { lat, lng, radius, groupName } = this.state;
     getGroup({
       lat: lat,
-      lng: lon,
+      lng: lng,
       radius,
       groupName,
     });
@@ -128,6 +130,10 @@ class GroupMode extends Component {
   };
 
   handleClickOnMap = pos => {
+    if (this.state.isMapForLat) {
+      this.setState({ lat: pos.lat, lng: pos.lng });
+      return;
+    }
     const gname = this.state.groupName;
     const lat = pos.lat;
     const lng = pos.lng;
@@ -152,7 +158,7 @@ class GroupMode extends Component {
       labels: undefined, //["מודיעין-מכבים-רעות"]
       last_modified: undefined, //"Wed, 24 Jul 2019 10:25:23 GMT"
       lat: pos.lat,
-      lon: pos.lng,
+      lng: pos.lng,
       night_item: false,
       notes: null,
       original_id: undefined,
@@ -180,6 +186,7 @@ class GroupMode extends Component {
       urlsafe: undefined,
       writer_username: undefined, //"May"
     });
+    console.log('33', this.state.questionArray);
     this.setState({ questionArray: this.state.questionArray });
   };
 
@@ -212,10 +219,11 @@ class GroupMode extends Component {
     const {
       groupName,
       lat,
-      lon,
+      lng,
       radius,
       questionArray,
       selectedIndex,
+      isMapForLat,
     } = this.state;
     return (
       <Grid style={{ padding: 8 }}>
@@ -246,13 +254,13 @@ class GroupMode extends Component {
               </Grid>
               <Grid item xs={4}>
                 <TextField
-                  id="lon"
-                  label="LON"
+                  id="lng"
+                  label="lng"
                   placeholder="0~180"
                   className={classes.textField}
                   margin="normal"
-                  value={lon}
-                  onChange={this.handleInput('lon')}
+                  value={lng}
+                  onChange={this.handleInput('lng')}
                 />
               </Grid>
               <Grid item xs={4}>
@@ -372,23 +380,34 @@ class GroupMode extends Component {
             )}
           </Grid>
           <Grid item xs={12} sm={8}>
-            {questionArray && (
-              <MapManager
-                questionMarkers={questionArray}
-                center={
-                  questionArray.length > 0
-                    ? {
-                        lat: questionArray[0].coords[0][0],
-                        lng: questionArray[0].coords[0][1],
-                      }
-                    : { lat: 36, lng: 32 }
-                }
-                onClickMarker={this.handleSelectMarker}
-                onMarkerPosChange={this.handleMarkerPos}
-                onCreateNewItem={this.handleClickOnMap}
-                onClickCloseBtn={this.handleRemoveItem}
-              />
-            )}
+            <FormControlLabel
+              style={{ marginLeft: 16 }}
+              control={
+                <Checkbox
+                  color="primary"
+                  checked={isMapForLat}
+                  onChange={e => {
+                    this.setState({ isMapForLat: e.target.checked });
+                  }}
+                />
+              }
+              label="use map for select lat,lng"
+            />
+            <MapManager
+              questionMarkers={questionArray}
+              center={
+                questionArray.length > 0
+                  ? {
+                      lat: questionArray[0].coords[0][0],
+                      lng: questionArray[0].coords[0][1],
+                    }
+                  : { lat: 31.243696653513304, lng: 34.79659199146829 }
+              }
+              onClickMarker={this.handleSelectMarker}
+              onMarkerPosChange={this.handleMarkerPos}
+              onCreateNewItem={this.handleClickOnMap}
+              onClickCloseBtn={this.handleRemoveItem}
+            />
           </Grid>
         </Grid>
         {questionArray && (
