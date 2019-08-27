@@ -54,8 +54,10 @@ class GroupMode extends Component {
       lng: '',
       radius: '',
       questionArray: [],
+      // itemsArray: [],
 
       selectedIndex: -1,
+      // selectedItemIndex: -1,
 
       isLoaded: false,
       isMapForLat: true,
@@ -113,7 +115,18 @@ class GroupMode extends Component {
 
   componentWillReceiveProps = nextProps => {
     const { group } = nextProps;
-    this.setState({ questionArray: group.group_items });
+    var itemsAll = [];
+    group.group_items.map(item => {
+      item.kind = 'group';
+      item.isDeleted = false;
+      itemsAll.push(item);
+    });
+    group.items.map(item => {
+      item.kind = 'item';
+      item.isDeleted = false;
+      itemsAll.push(item);
+    });
+    this.setState({ questionArray: itemsAll });
   };
 
   handleSelectMarker = index => {
@@ -185,8 +198,8 @@ class GroupMode extends Component {
       type: 'question',
       urlsafe: undefined,
       writer_username: undefined, //"May"
+      kind: 'group',
     });
-    console.log('33', this.state.questionArray);
     this.setState({ questionArray: this.state.questionArray });
   };
 
@@ -202,8 +215,14 @@ class GroupMode extends Component {
     const { postGroup } = this.props;
     postGroup({
       group_name: this.state.groupName,
-      items: this.state.questionArray.map(p => {
-        if (!p.isDeleted) return { ...p, ref: undefined };
+      include_follow_up: true,
+      group_items: this.state.questionArray.filter(function(p) {
+        if (!p.isDeleted && p.kind === 'group') return true;
+        return false;
+      }),
+      items: this.state.questionArray.filter(function(p) {
+        if (!p.isDeleted && p.kind === 'item') return true;
+        return false;
       }),
     });
   };
@@ -214,6 +233,17 @@ class GroupMode extends Component {
     this.setState({ questionArray: questionArray });
   };
 
+  handleAddtoGroup = () => {
+    const { questionArray, selectedIndex } = this.state;
+    questionArray[selectedIndex].kind = 'group';
+    this.setState({ questionArray: questionArray });
+  };
+
+  handleRemoveFromGroup = () => {
+    const { questionArray, selectedIndex } = this.state;
+    questionArray[selectedIndex].kind = 'item';
+    this.setState({ questionArray: questionArray });
+  };
   render() {
     const { classes } = this.props;
     const {
@@ -222,6 +252,9 @@ class GroupMode extends Component {
       lng,
       radius,
       questionArray,
+      // itemsArray,
+      // selectedItemIndex,
+
       selectedIndex,
       isMapForLat,
     } = this.state;
@@ -375,6 +408,30 @@ class GroupMode extends Component {
                       />
                     </Grid>
                   </div>
+                )}
+                {questionArray[selectedIndex].kind === 'item' && (
+                  <Grid item xs={12}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                      onClick={this.handleAddtoGroup}
+                    >
+                      Add to Group
+                    </Button>
+                  </Grid>
+                )}
+                {questionArray[selectedIndex].kind === 'group' && (
+                  <Grid item xs={12}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="small"
+                      onClick={this.handleRemoveFromGroup}
+                    >
+                      Remove from Group
+                    </Button>
+                  </Grid>
                 )}
               </Grid>
             )}

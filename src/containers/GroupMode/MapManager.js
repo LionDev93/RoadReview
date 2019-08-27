@@ -102,7 +102,7 @@ const MapManager = compose(
                     lat: parseFloat(question.coords[0][0]),
                     lng: parseFloat(question.coords[0][1]),
                   }}
-                  icon={markerIcon}
+                  icon={question.kind === 'group' ? markerIcon : ''}
                   draggable={true}
                   onDragEnd={onMarkerDragEnd(index)}
                   onClick={() => handleMarkerClick(index)}
