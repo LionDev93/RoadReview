@@ -216,12 +216,16 @@ class GroupMode extends Component {
     postGroup({
       group_name: this.state.groupName,
       include_follow_up: true,
-      group_items: this.state.questionArray.filter(function(p) {
-        if (!p.isDeleted && p.kind === 'group') return true;
-        return false;
-      }),
+      // group_items: this.state.questionArray.filter(function(p) {
+      //   if (!p.isDeleted && p.kind === 'group') return true;
+      //   return false;
+      // }),
+      // items: this.state.questionArray.filter(function(p) {
+      //   if (!p.isDeleted && p.kind === 'item') return true;
+      //   return false;
+      // }),
       items: this.state.questionArray.filter(function(p) {
-        if (!p.isDeleted && p.kind === 'item') return true;
+        if (!p.isDeleted && p.kind === 'group') return true;
         return false;
       }),
     });
