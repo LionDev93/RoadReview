@@ -13,6 +13,10 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import { NotificationManager } from 'react-notifications';
 import { connect } from 'react-redux';
+// import LoadingOverlay from 'react-loading-overlay';
+import Dialog from '@material-ui/core/Dialog';
+import { DialogContent } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 import MapWrapper from '../../views/organisms/MapWrapper';
 import MapManager from './MapManager';
@@ -43,6 +47,13 @@ const styles = theme => ({
   listStyle: {
     marginBottom: 12,
   },
+  listStyle_group: {
+    marginBottom: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  group_background: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
 });
 
 class GroupMode extends Component {
@@ -59,13 +70,12 @@ class GroupMode extends Component {
       selectedIndex: -1,
       // selectedItemIndex: -1,
 
-      isLoaded: false,
+      isLoading: false,
       isMapForLat: true,
     };
   }
 
   componentDidMount() {}
-  componentWillReceiveProps(newProps) {}
 
   handleInput = input => e => {
     this.setState({ [input]: e.target.value });
@@ -110,7 +120,7 @@ class GroupMode extends Component {
       groupName,
     });
 
-    this.setState({ isLoaded: true });
+    this.setState({ isLoading: true });
   };
 
   componentWillReceiveProps = nextProps => {
@@ -126,7 +136,7 @@ class GroupMode extends Component {
       item.isDeleted = false;
       itemsAll.push(item);
     });
-    this.setState({ questionArray: itemsAll });
+    this.setState({ questionArray: itemsAll, isLoading: false });
   };
 
   handleSelectMarker = index => {
@@ -215,7 +225,6 @@ class GroupMode extends Component {
     const { postGroup } = this.props;
     postGroup({
       group_name: this.state.groupName,
-      include_follow_up: true,
       // group_items: this.state.questionArray.filter(function(p) {
       //   if (!p.isDeleted && p.kind === 'group') return true;
       //   return false;
@@ -225,10 +234,14 @@ class GroupMode extends Component {
       //   return false;
       // }),
       items: this.state.questionArray.filter(function(p) {
-        if (!p.isDeleted && p.kind === 'group') return true;
+        if (!p.isDeleted && p.kind === 'group') {
+          p.include_follow_up = true;
+          return true;
+        }
         return false;
       }),
     });
+    this.setState({ isLoading: true });
   };
 
   handleRemoveChild = () => {
@@ -261,6 +274,8 @@ class GroupMode extends Component {
 
       selectedIndex,
       isMapForLat,
+
+      isLoading,
     } = this.state;
     return (
       <Grid style={{ padding: 8 }}>
@@ -337,7 +352,7 @@ class GroupMode extends Component {
         <Grid container>
           <Grid item xs={12} sm={4}>
             {selectedIndex > -1 && (
-              <Grid container>
+              <Grid container style={{ marginTop: 60 }}>
                 <Grid item xs={12}>
                   <p>Label: {selectedIndex}</p>
                 </Grid>
@@ -382,7 +397,7 @@ class GroupMode extends Component {
                         size="small"
                         onClick={this.handleRemoveChild}
                       >
-                        Remove
+                        Remove child only
                       </Button>
                     </Grid>
                     <Grid item xs={12} style={{ paddingRight: 8 }}>
@@ -433,7 +448,7 @@ class GroupMode extends Component {
                       size="small"
                       onClick={this.handleRemoveFromGroup}
                     >
-                      Remove from Group
+                      Remove whole item from Group
                     </Button>
                   </Grid>
                 )}
@@ -457,12 +472,13 @@ class GroupMode extends Component {
             <MapManager
               questionMarkers={questionArray}
               center={
-                questionArray.length > 0
-                  ? {
-                      lat: questionArray[0].coords[0][0],
-                      lng: questionArray[0].coords[0][1],
-                    }
-                  : { lat: 31.243696653513304, lng: 34.79659199146829 }
+                // questionArray.length > 0
+                //   ? {
+                //       lat: questionArray[0].coords[0][0],
+                //       lng: questionArray[0].coords[0][1],
+                //     }
+                // :
+                { lat: 32.060576042538216, lng: 34.8643424543518 }
               }
               onClickMarker={this.handleSelectMarker}
               onMarkerPosChange={this.handleMarkerPos}
@@ -506,6 +522,9 @@ class GroupMode extends Component {
                     marginBottom: 4,
                     padding: 4,
                   }}
+                  className={
+                    item.kind === 'group' ? classes.group_background : ''
+                  }
                 >
                   <Grid container className={classes.listStyle}>
                     <Grid item xs={12} sm={4}>
@@ -532,6 +551,16 @@ class GroupMode extends Component {
               );
             }
           })}
+        <Dialog
+          style={{ backgroundColor: 'transparent' }}
+          disableBackdropClick
+          disableEscapeKeyDown
+          open={isLoading}
+        >
+          <DialogContent>
+            <CircularProgress />
+          </DialogContent>
+        </Dialog>
       </Grid>
     );
   }

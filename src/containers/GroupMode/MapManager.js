@@ -32,7 +32,7 @@ const MapManager = compose(
       'https://maps.googleapis.com/maps/api/js?key=AIzaSyDSbOVMr0GAABOWMFiaUZJqjWrWu9p00fw&v=3&libraries=geometry,drawing,places',
     loadingElement: <div style={{ height: `100%` }} />,
     containerElement: (
-      <div className="mainContainer" style={{ height: `400px` }} />
+      <div className="mainContainer" style={{ height: `700px` }} />
     ),
     mapElement: <div className="map-item" style={{ ...mapStyle }} />,
   }),
