@@ -105,6 +105,11 @@ class GroupMode extends Component {
   };
 
   handleLoad = () => {
+    const { lat, lng, radius, groupName } = this.state;
+    if (!lat || !lng || !radius || !groupName || !groupName) {
+      NotificationManager.warning('Fill the input boxes!');
+      return;
+    }
     this.setState({ selectedIndex: -1 }, function() {
       this.getGroup();
     });
@@ -124,11 +129,12 @@ class GroupMode extends Component {
   };
 
   componentWillReceiveProps = nextProps => {
-    const { group } = nextProps;
+    const { group, updated } = nextProps;
     var itemsAll = [];
     group.group_items.map(item => {
       item.kind = 'group';
       item.isDeleted = false;
+      item.include_follow_up = true;
       itemsAll.push(item);
     });
     group.items.map(item => {
@@ -136,6 +142,7 @@ class GroupMode extends Component {
       item.isDeleted = false;
       itemsAll.push(item);
     });
+    console.log('hahaha', updated, nextProps);
     this.setState({ questionArray: itemsAll, isLoading: false });
   };
 
@@ -223,6 +230,7 @@ class GroupMode extends Component {
 
   handleSave = () => {
     const { postGroup } = this.props;
+    this.setState({ isLoading: true });
     postGroup({
       group_name: this.state.groupName,
       // group_items: this.state.questionArray.filter(function(p) {
@@ -235,18 +243,20 @@ class GroupMode extends Component {
       // }),
       items: this.state.questionArray.filter(function(p) {
         if (!p.isDeleted && p.kind === 'group') {
-          p.include_follow_up = true;
+          // p.include_follow_up = true;
           return true;
         }
         return false;
       }),
     });
+    console.log('213332');
     this.setState({ isLoading: true });
   };
 
   handleRemoveChild = () => {
     const { questionArray, selectedIndex } = this.state;
     questionArray[selectedIndex].related.splice(0, 1);
+    questionArray[selectedIndex].include_follow_up = false;
     this.setState({ questionArray: questionArray });
   };
 
@@ -278,216 +288,70 @@ class GroupMode extends Component {
       isLoading,
     } = this.state;
     return (
-      <Grid style={{ padding: 8 }}>
-        <Grid container>
-          <Grid item xs={12} sm={5}>
-            <TextField
-              id="group-name"
-              label="Group Name"
-              placeholder="..."
-              className={classes.textField}
-              margin="normal"
-              value={groupName}
-              onChange={this.handleInput('groupName')}
-            />
-          </Grid>
-          <Grid item xs={12} sm={7}>
-            <Grid container>
-              <Grid item xs={4}>
-                <TextField
-                  id="lat"
-                  label="LAT"
-                  placeholder="0~90"
-                  className={classes.textField}
-                  margin="normal"
-                  value={lat}
-                  onChange={this.handleInput('lat')}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  id="lng"
-                  label="lng"
-                  placeholder="0~180"
-                  className={classes.textField}
-                  margin="normal"
-                  value={lng}
-                  onChange={this.handleInput('lng')}
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  id="radius"
-                  label="Radius"
-                  placeholder="..."
-                  className={classes.textField}
-                  margin="normal"
-                  value={radius}
-                  onChange={this.handleInput('radius')}
-                />
+      <div>
+        <Dialog
+          style={{ backgroundColor: 'transparent' }}
+          disableBackdropClick
+          disableEscapeKeyDown
+          open={isLoading}
+        >
+          <DialogContent>
+            <CircularProgress />
+          </DialogContent>
+        </Dialog>
+
+        <Grid style={{ padding: 8 }}>
+          <Grid container>
+            <Grid item xs={12} sm={5}>
+              <TextField
+                id="group-name"
+                label="Group Name"
+                placeholder="..."
+                className={classes.textField}
+                margin="normal"
+                value={groupName}
+                onChange={this.handleInput('groupName')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={7}>
+              <Grid container>
+                <Grid item xs={4}>
+                  <TextField
+                    id="lat"
+                    label="LAT"
+                    placeholder="0~90"
+                    className={classes.textField}
+                    margin="normal"
+                    value={lat}
+                    onChange={this.handleInput('lat')}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    id="lng"
+                    label="lng"
+                    placeholder="0~180"
+                    className={classes.textField}
+                    margin="normal"
+                    value={lng}
+                    onChange={this.handleInput('lng')}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    id="radius"
+                    label="Radius"
+                    placeholder="..."
+                    className={classes.textField}
+                    margin="normal"
+                    type="number"
+                    value={radius}
+                    onChange={this.handleInput('radius')}
+                  />
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
-        </Grid>
-        <Grid container>
-          <Grid
-            item
-            xs={12}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Button
-              style={{ margin: 16 }}
-              variant="contained"
-              color="primary"
-              onClick={this.handleLoad}
-            >
-              Load
-            </Button>
-          </Grid>
-        </Grid>
-        <Grid container>
-          <Grid item xs={12} sm={4}>
-            {selectedIndex > -1 && (
-              <Grid container style={{ marginTop: 60 }}>
-                <Grid item xs={12}>
-                  <p>Label: {selectedIndex}</p>
-                </Grid>
-                <Grid item xs={12}>
-                  <p>
-                    Pos: {questionArray[selectedIndex].coords[0].join(', ')}
-                  </p>
-                </Grid>
-                <Grid item xs={12} style={{ paddingRight: 8 }}>
-                  <TextField
-                    label="Question"
-                    placeholder="..."
-                    className={classes.textField}
-                    style={{ marginLeft: 0 }}
-                    margin="normal"
-                    value={questionArray[selectedIndex].question}
-                    multiline
-                    fullWidth
-                    onChange={this.handleEditQuestion}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Story"
-                    placeholder="..."
-                    className={classes.textField}
-                    style={{ marginLeft: 0 }}
-                    margin="normal"
-                    value={questionArray[selectedIndex].story}
-                    multiline
-                    fullWidth
-                    onChange={this.handleEditStory}
-                  />
-                </Grid>
-                {questionArray[selectedIndex].related.length > 0 && (
-                  <div>
-                    <Grid item xs={12}>
-                      Child:
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                        onClick={this.handleRemoveChild}
-                      >
-                        Remove child only
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12} style={{ paddingRight: 8 }}>
-                      <TextField
-                        label="Question"
-                        placeholder="..."
-                        className={classes.textField}
-                        style={{ marginLeft: 0 }}
-                        margin="normal"
-                        value={questionArray[selectedIndex].related[0].question}
-                        multiline
-                        fullWidth
-                        onChange={this.handleEditQuestionChild}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Story"
-                        placeholder="..."
-                        className={classes.textField}
-                        style={{ marginLeft: 0 }}
-                        margin="normal"
-                        value={questionArray[selectedIndex].related[0].story}
-                        multiline
-                        fullWidth
-                        onChange={this.handleEditStoryChild}
-                      />
-                    </Grid>
-                  </div>
-                )}
-                {questionArray[selectedIndex].kind === 'item' && (
-                  <Grid item xs={12}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                      onClick={this.handleAddtoGroup}
-                    >
-                      Add to Group
-                    </Button>
-                  </Grid>
-                )}
-                {questionArray[selectedIndex].kind === 'group' && (
-                  <Grid item xs={12}>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      size="small"
-                      onClick={this.handleRemoveFromGroup}
-                    >
-                      Remove whole item from Group
-                    </Button>
-                  </Grid>
-                )}
-              </Grid>
-            )}
-          </Grid>
-          <Grid item xs={12} sm={8}>
-            <FormControlLabel
-              style={{ marginLeft: 16 }}
-              control={
-                <Checkbox
-                  color="primary"
-                  checked={isMapForLat}
-                  onChange={e => {
-                    this.setState({ isMapForLat: e.target.checked });
-                  }}
-                />
-              }
-              label="use map for select lat,lng"
-            />
-            <MapManager
-              questionMarkers={questionArray}
-              center={
-                // questionArray.length > 0
-                //   ? {
-                //       lat: questionArray[0].coords[0][0],
-                //       lng: questionArray[0].coords[0][1],
-                //     }
-                // :
-                { lat: 32.060576042538216, lng: 34.8643424543518 }
-              }
-              onClickMarker={this.handleSelectMarker}
-              onMarkerPosChange={this.handleMarkerPos}
-              onCreateNewItem={this.handleClickOnMap}
-              onClickCloseBtn={this.handleRemoveItem}
-            />
-          </Grid>
-        </Grid>
-        {questionArray && (
           <Grid container>
             <Grid
               item
@@ -501,73 +365,226 @@ class GroupMode extends Component {
               <Button
                 style={{ margin: 16 }}
                 variant="contained"
-                color="secondary"
-                onClick={this.handleSave}
+                color="primary"
+                onClick={this.handleLoad}
               >
-                Save
+                Load
               </Button>
             </Grid>
           </Grid>
-        )}
-        {questionArray &&
-          questionArray.length > 0 &&
-          questionArray.map((item, index) => {
-            if (!item.isDeleted) {
-              return (
-                <div
-                  style={{
-                    borderWidth: 1,
-                    borderColor: '#333',
-                    borderStyle: 'dotted',
-                    marginBottom: 4,
-                    padding: 4,
-                  }}
-                  className={
-                    item.kind === 'group' ? classes.group_background : ''
-                  }
-                >
-                  <Grid container className={classes.listStyle}>
-                    <Grid item xs={12} sm={4}>
-                      {index}. {item.question}
-                    </Grid>
-                    <Grid item xs={12} sm={8}>
-                      {item.story}
-                    </Grid>
-                    {item.related.length > 0 && (
-                      <Grid item xs={12} container>
-                        <Grid item xs={12}>
-                          Child:
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          {item.related[0].question}
-                        </Grid>
-                        <Grid item xs={12} sm={8}>
-                          {item.related[0].story}
-                        </Grid>
-                      </Grid>
-                    )}
+          <Grid container>
+            <Grid item xs={12} sm={4}>
+              {selectedIndex > -1 && (
+                <Grid container style={{ marginTop: 60 }}>
+                  <Grid item xs={12}>
+                    <p>Label: {selectedIndex}</p>
                   </Grid>
-                </div>
-              );
-            }
-          })}
-        <Dialog
-          style={{ backgroundColor: 'transparent' }}
-          disableBackdropClick
-          disableEscapeKeyDown
-          open={isLoading}
-        >
-          <DialogContent>
-            <CircularProgress />
-          </DialogContent>
-        </Dialog>
-      </Grid>
+                  <Grid item xs={12}>
+                    <p>
+                      Pos: {questionArray[selectedIndex].coords[0].join(', ')}
+                    </p>
+                  </Grid>
+                  <Grid item xs={12} style={{ paddingRight: 8 }}>
+                    <TextField
+                      label="Question"
+                      placeholder="..."
+                      className={classes.textField}
+                      style={{ marginLeft: 0 }}
+                      margin="normal"
+                      value={questionArray[selectedIndex].question}
+                      multiline
+                      fullWidth
+                      onChange={this.handleEditQuestion}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Story"
+                      placeholder="..."
+                      className={classes.textField}
+                      style={{ marginLeft: 0 }}
+                      margin="normal"
+                      value={questionArray[selectedIndex].story}
+                      multiline
+                      fullWidth
+                      onChange={this.handleEditStory}
+                    />
+                  </Grid>
+                  {questionArray[selectedIndex].related.length > 0 && (
+                    <div>
+                      <Grid item xs={12}>
+                        Child:
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          size="small"
+                          onClick={this.handleRemoveChild}
+                        >
+                          Remove child only
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} style={{ paddingRight: 8 }}>
+                        <TextField
+                          label="Question"
+                          placeholder="..."
+                          className={classes.textField}
+                          style={{ marginLeft: 0 }}
+                          margin="normal"
+                          value={
+                            questionArray[selectedIndex].related[0].question
+                          }
+                          multiline
+                          fullWidth
+                          onChange={this.handleEditQuestionChild}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Story"
+                          placeholder="..."
+                          className={classes.textField}
+                          style={{ marginLeft: 0 }}
+                          margin="normal"
+                          value={questionArray[selectedIndex].related[0].story}
+                          multiline
+                          fullWidth
+                          onChange={this.handleEditStoryChild}
+                        />
+                      </Grid>
+                    </div>
+                  )}
+                  {questionArray[selectedIndex].kind === 'item' && (
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={this.handleAddtoGroup}
+                      >
+                        Add to Group
+                      </Button>
+                    </Grid>
+                  )}
+                  {questionArray[selectedIndex].kind === 'group' && (
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        onClick={this.handleRemoveFromGroup}
+                      >
+                        Remove whole item from Group
+                      </Button>
+                    </Grid>
+                  )}
+                </Grid>
+              )}
+            </Grid>
+            <Grid item xs={12} sm={8}>
+              {/* <FormControlLabel
+                style={{ marginLeft: 16 }}
+                control={
+                  <Checkbox
+                    color="primary"
+                    checked={isMapForLat}
+                    onChange={e => {
+                      this.setState({ isMapForLat: e.target.checked });
+                    }}
+                  />
+                }
+                label="use map for select lat,lng"
+              /> */}
+              <MapManager
+                questionMarkers={questionArray}
+                center={
+                  // questionArray.length > 0
+                  //   ? {
+                  //       lat: questionArray[0].coords[0][0],
+                  //       lng: questionArray[0].coords[0][1],
+                  //     }
+                  // :
+                  { lat: 32.060576042538216, lng: 34.8643424543518 }
+                }
+                onClickMarker={this.handleSelectMarker}
+                onMarkerPosChange={this.handleMarkerPos}
+                onCreateNewItem={this.handleClickOnMap}
+                onClickCloseBtn={this.handleRemoveItem}
+              />
+            </Grid>
+          </Grid>
+          {questionArray && (
+            <Grid container>
+              <Grid
+                item
+                xs={12}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Button
+                  style={{ margin: 16 }}
+                  variant="contained"
+                  color="secondary"
+                  onClick={this.handleSave}
+                >
+                  Save
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+          {questionArray &&
+            questionArray.length > 0 &&
+            questionArray.map((item, index) => {
+              if (!item.isDeleted) {
+                return (
+                  <div
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#333',
+                      borderStyle: 'dotted',
+                      marginBottom: 4,
+                      padding: 4,
+                    }}
+                    className={
+                      item.kind === 'group' ? classes.group_background : ''
+                    }
+                  >
+                    <Grid container className={classes.listStyle}>
+                      <Grid item xs={12} sm={4}>
+                        {index}. {item.question}
+                      </Grid>
+                      <Grid item xs={12} sm={8}>
+                        {item.story}
+                      </Grid>
+                      {item.related.length > 0 && (
+                        <Grid item xs={12} container>
+                          <Grid item xs={12}>
+                            Child:
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
+                            {item.related[0].question}
+                          </Grid>
+                          <Grid item xs={12} sm={8}>
+                            {item.related[0].story}
+                          </Grid>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </div>
+                );
+              }
+            })}
+        </Grid>
+      </div>
     );
   }
 }
 
 const mapStateToProps = state => ({
   group: state.placesReducer.group,
+  updated: state.placesReducer.updated,
 });
 
 export default connect(

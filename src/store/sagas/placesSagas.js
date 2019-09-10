@@ -1,5 +1,10 @@
 import { all, take, put, select } from 'redux-saga/effects';
-import { GET_GROUP, POST_GROUP, SET_GROUP_PLACES } from '../action-types';
+import {
+  GET_GROUP,
+  POST_GROUP,
+  SET_GROUP_PLACES,
+  POST_RESULT,
+} from '../action-types';
 import gcp_config from '../../GCP_configs';
 import fetchStream from 'fetch-readablestream';
 import { NotificationManager } from 'react-notifications';
@@ -20,9 +25,18 @@ const onPostGroupSaga = function*() {
         body: JSON.stringify(action.payload),
       });
       NotificationManager.success('Updated~');
+      yield put({
+        type: POST_RESULT,
+        payload: 1,
+      });
+      return;
     } catch (e) {
       console.log(e);
     }
+    yield put({
+      type: POST_RESULT,
+      payload: 0,
+    });
   }
 };
 
@@ -36,9 +50,7 @@ const onGetGroupSage = function*() {
         'Basic ' + btoa(gcp_config.username + ':' + gcp_config.password),
       );
       let response = yield fetch(
-        `https://roadio-master.appspot.com/v1/fetch_group?group_name=${
-          payload.groupName
-        }&lat=${payload.lat}&lon=${payload.lng}&radius=${payload.radius}`,
+        `https://roadio-master.appspot.com/v1/fetch_group?group_name=${payload.groupName}&lat=${payload.lat}&lon=${payload.lng}&radius=${payload.radius}`,
         {
           method: 'GET',
           headers: headers,

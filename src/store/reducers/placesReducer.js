@@ -1,24 +1,29 @@
-import initialState from "../initialState";
-import injectReducer from "../injectReducer";
+import initialState from '../initialState';
+import injectReducer from '../injectReducer';
 import {
   CLEAR_GROUP_PLACES,
   SET_GROUP_PLACES,
   SET_PLACES,
   ADD_NEW_ITEM,
-} from "../action-types";
+  POST_RESULT,
+} from '../action-types';
 
 const handlers = {
+  [POST_RESULT]: (state, { payload }) => ({
+    ...state,
+    updated: payload,
+  }),
   [SET_PLACES]: (state, { payload }) => ({
     ...state,
-    data: payload
+    data: payload,
   }),
   [SET_GROUP_PLACES]: (state, { payload }) => ({
     ...state,
-    group: payload
+    group: payload,
   }),
   [CLEAR_GROUP_PLACES]: (state, { payload }) => ({
     ...state,
-    group: null
+    group: null,
   }),
   [ADD_NEW_ITEM]: (state, { payload }) => ({
     ...state,
@@ -26,7 +31,7 @@ const handlers = {
     //   ...state.group,
     //   payload
     // }
-  })
+  }),
 };
 
 export default injectReducer(initialState.placesReducer, handlers);
