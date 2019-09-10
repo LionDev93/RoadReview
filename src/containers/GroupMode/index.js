@@ -49,10 +49,10 @@ const styles = theme => ({
   },
   listStyle_group: {
     marginBottom: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#ffcc80',
   },
   group_background: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#ffcc80',
   },
 });
 
@@ -131,17 +131,20 @@ class GroupMode extends Component {
   componentWillReceiveProps = nextProps => {
     const { group, updated } = nextProps;
     var itemsAll = [];
+    group.items.map(item => {
+      item.kind = 'item';
+      item.isDeleted = false;
+      item.include_follow_up = true;
+      itemsAll.push(item);
+    });
+
     group.group_items.map(item => {
       item.kind = 'group';
       item.isDeleted = false;
       item.include_follow_up = true;
       itemsAll.push(item);
     });
-    group.items.map(item => {
-      item.kind = 'item';
-      item.isDeleted = false;
-      itemsAll.push(item);
-    });
+
     console.log('hahaha', updated, nextProps);
     this.setState({ questionArray: itemsAll, isLoading: false });
   };
@@ -257,6 +260,13 @@ class GroupMode extends Component {
     const { questionArray, selectedIndex } = this.state;
     questionArray[selectedIndex].related.splice(0, 1);
     questionArray[selectedIndex].include_follow_up = false;
+    // const item_id = questionArray[selectedIndex].item_id;
+    // questionArray.map(item => {
+    //   if (item.item_id === item_id) {
+    //     console.log('fff', item_id);
+    //     item.include_follow_up = false;
+    //   }
+    // });
     this.setState({ questionArray: questionArray });
   };
 
