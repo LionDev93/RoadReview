@@ -131,15 +131,14 @@ class GroupMode extends Component {
   componentWillReceiveProps = nextProps => {
     const { group, updated } = nextProps;
     var itemsAll = [];
-    group.items.map(item => {
-      item.kind = 'item';
+    group.group_items.map(item => {
+      item.kind = 'group';
       item.isDeleted = false;
       item.include_follow_up = true;
       itemsAll.push(item);
     });
-
-    group.group_items.map(item => {
-      item.kind = 'group';
+    group.items.map(item => {
+      item.kind = 'item';
       item.isDeleted = false;
       item.include_follow_up = true;
       itemsAll.push(item);
@@ -547,7 +546,49 @@ class GroupMode extends Component {
           {questionArray &&
             questionArray.length > 0 &&
             questionArray.map((item, index) => {
-              if (!item.isDeleted) {
+              if (!item.isDeleted && item.kind === 'group') {
+                return (
+                  <div
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#333',
+                      borderStyle: 'dotted',
+                      marginBottom: 4,
+                      padding: 4,
+                    }}
+                    className={
+                      item.kind === 'group' ? classes.group_background : ''
+                    }
+                  >
+                    <Grid container className={classes.listStyle}>
+                      <Grid item xs={12} sm={4}>
+                        {index}. {item.question}
+                      </Grid>
+                      <Grid item xs={12} sm={8}>
+                        {item.story}
+                      </Grid>
+                      {item.related.length > 0 && (
+                        <Grid item xs={12} container>
+                          <Grid item xs={12}>
+                            Child:
+                          </Grid>
+                          <Grid item xs={12} sm={4}>
+                            {item.related[0].question}
+                          </Grid>
+                          <Grid item xs={12} sm={8}>
+                            {item.related[0].story}
+                          </Grid>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </div>
+                );
+              }
+            })}
+          {questionArray &&
+            questionArray.length > 0 &&
+            questionArray.map((item, index) => {
+              if (!item.isDeleted && item.kind !== 'group') {
                 return (
                   <div
                     style={{

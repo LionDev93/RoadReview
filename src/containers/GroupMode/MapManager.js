@@ -93,32 +93,46 @@ const MapManager = compose(
         }
       >
         {props.questionMarkers &&
-          props.questionMarkers.map((question, index) => {
-            if (!question.isDeleted) {
-              return (
-                <Marker
-                  key={index}
-                  position={{
-                    lat: parseFloat(question.coords[0][0]),
-                    lng: parseFloat(question.coords[0][1]),
-                  }}
-                  icon={question.kind === 'group' ? markerIcon : ''}
-                  draggable={true}
-                  onDragEnd={onMarkerDragEnd(index)}
-                  onClick={() => handleMarkerClick(index)}
-                >
-                  <InfoWindow
-                    onCloseClick={() => {
-                      console.log('infoClose', index);
-                      props.onClickCloseBtn(index);
+          props.questionMarkers
+            .slice(0)
+            .reverse()
+            .map((question, index) => {
+              if (!question.isDeleted) {
+                return (
+                  <Marker
+                    key={index}
+                    position={{
+                      lat: parseFloat(question.coords[0][0]),
+                      lng: parseFloat(question.coords[0][1]),
                     }}
+                    icon={question.kind === 'group' ? markerIcon : ''}
+                    draggable={true}
+                    onDragEnd={onMarkerDragEnd(
+                      props.questionMarkers.length - 1 - index,
+                    )}
+                    onClick={() =>
+                      handleMarkerClick(
+                        props.questionMarkers.length - 1 - index,
+                      )
+                    }
                   >
-                    <div>{index}</div>
-                  </InfoWindow>
-                </Marker>
-              );
-            }
-          })}
+                    <InfoWindow
+                      onCloseClick={() => {
+                        console.log(
+                          'infoClose',
+                          props.questionMarkers.length - 1 - index,
+                        );
+                        props.onClickCloseBtn(
+                          props.questionMarkers.length - 1 - index,
+                        );
+                      }}
+                    >
+                      <div>{props.questionMarkers.length - 1 - index}</div>
+                    </InfoWindow>
+                  </Marker>
+                );
+              }
+            })}
       </GoogleMap>
     </div>
   );

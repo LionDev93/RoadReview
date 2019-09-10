@@ -58,7 +58,7 @@ const onGetGroupSage = function*() {
       );
       response = yield response.json();
       console.log('get group:', response);
-      NotificationManager.success('Loaded: ' + response.group_items.length);
+      NotificationManager.success('GroupItems: ' + response.group_items.length);
       yield put({
         type: SET_GROUP_PLACES,
         payload: response,
