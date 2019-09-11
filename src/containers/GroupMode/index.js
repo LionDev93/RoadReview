@@ -641,7 +641,13 @@ class GroupMode extends Component {
         </Grid>
         <Dialog disableBackdropClick disableEscapeKeyDown open={isLoading}>
           <DialogContent
-            style={{ minWidth: 100, display: 'flex', justifyContent: 'center' }}
+            style={{
+              minWidth: 150,
+              minHeight: 150,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
           >
             <CircularProgress />
           </DialogContent>
