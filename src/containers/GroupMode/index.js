@@ -159,19 +159,22 @@ class GroupMode extends Component {
   handleMarkerPos = (index, pos) => {
     this.state.questionArray[index].coords[0][0] = pos.lat;
     this.state.questionArray[index].coords[0][1] = pos.lng;
-    if (this.state.questionArray[index].groups_locations) {
-      // this.state.questionArray[index].groups_locations = {
-      //   [this.state.groupName]: { lat: pos.lat, lon: pos.lng },
-      // };
-
-      Object.keys(this.state.questionArray[index].groups_locations).map(
-        item => {
-          this.state.questionArray[index].groups_locations[item] = {
-            lat: pos.lat,
-            lon: pos.lng,
-          };
-        },
-      );
+    if (
+      this.state.questionArray[index].groups_locations &&
+      this.state.questionArray[index].kind === 'group'
+    ) {
+      this.state.questionArray[index].groups_locations = {
+        [this.state.groupName]: { lat: pos.lat, lon: pos.lng },
+      };
+      console.log('group location has changed');
+      // Object.keys(this.state.questionArray[index].groups_locations).map(
+      //   item => {
+      //     this.state.questionArray[index].groups_locations[item] = {
+      //       lat: pos.lat,
+      //       lon: pos.lng,
+      //     };
+      //   },
+      // );
     }
     this.setState({
       questionArray: this.state.questionArray,
@@ -314,12 +317,7 @@ class GroupMode extends Component {
     } = this.state;
     return (
       <div>
-        <Dialog
-          style={{ backgroundColor: 'transparent' }}
-          disableBackdropClick
-          disableEscapeKeyDown
-          open={isLoading}
-        >
+        <Dialog disableBackdropClick disableEscapeKeyDown open={isLoading}>
           <DialogContent>
             <CircularProgress />
           </DialogContent>
