@@ -106,7 +106,7 @@ class GroupMode extends Component {
 
   handleLoad = () => {
     const { lat, lng, radius, groupName } = this.state;
-    if (!lat || !lng || !radius || !groupName || !groupName) {
+    if (!lat || !lng || !radius || !groupName) {
       NotificationManager.warning('Fill the input boxes!');
       return;
     }
@@ -130,6 +130,11 @@ class GroupMode extends Component {
 
   componentWillReceiveProps = nextProps => {
     const { group, updated } = nextProps;
+    if (group === null) {
+      NotificationManager.warning('Failed to load');
+      this.setState({ isLoading: false });
+      return;
+    }
     var itemsAll = [];
     group.group_items.map(item => {
       item.kind = 'group';
@@ -144,7 +149,6 @@ class GroupMode extends Component {
       itemsAll.push(item);
     });
 
-    console.log('hahaha', updated, nextProps);
     this.setState({ questionArray: itemsAll, isLoading: false });
   };
 
@@ -155,6 +159,20 @@ class GroupMode extends Component {
   handleMarkerPos = (index, pos) => {
     this.state.questionArray[index].coords[0][0] = pos.lat;
     this.state.questionArray[index].coords[0][1] = pos.lng;
+    if (this.state.questionArray[index].groups_locations) {
+      // this.state.questionArray[index].groups_locations = {
+      //   [this.state.groupName]: { lat: pos.lat, lon: pos.lng },
+      // };
+
+      Object.keys(this.state.questionArray[index].groups_locations).map(
+        item => {
+          this.state.questionArray[index].groups_locations[item] = {
+            lat: pos.lat,
+            lon: pos.lng,
+          };
+        },
+      );
+    }
     this.setState({
       questionArray: this.state.questionArray,
       selectedIndex: index,
@@ -232,7 +250,6 @@ class GroupMode extends Component {
 
   handleSave = () => {
     const { postGroup } = this.props;
-    this.setState({ isLoading: true });
     postGroup({
       group_name: this.state.groupName,
       // group_items: this.state.questionArray.filter(function(p) {
@@ -251,7 +268,6 @@ class GroupMode extends Component {
         return false;
       }),
     });
-    console.log('213332');
     this.setState({ isLoading: true });
   };
 

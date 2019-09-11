@@ -11,6 +11,7 @@ import { NotificationManager } from 'react-notifications';
 const onPostGroupSaga = function*() {
   while (true) {
     try {
+      console.log('postGroup called');
       const action = yield take(POST_GROUP);
       let headers = new Headers();
       headers.set(
@@ -29,20 +30,20 @@ const onPostGroupSaga = function*() {
         type: POST_RESULT,
         payload: 1,
       });
-      return;
     } catch (e) {
       console.log(e);
+      yield put({
+        type: POST_RESULT,
+        payload: 0,
+      });
     }
-    yield put({
-      type: POST_RESULT,
-      payload: 0,
-    });
   }
 };
 
 const onGetGroupSage = function*() {
   while (true) {
     try {
+      console.log('getGroup called');
       const { payload } = yield take(GET_GROUP);
       let headers = new Headers();
       headers.set(
@@ -65,6 +66,10 @@ const onGetGroupSage = function*() {
       });
     } catch (e) {
       console.log(e);
+      yield put({
+        type: SET_GROUP_PLACES,
+        payload: null,
+      });
     }
   }
 };

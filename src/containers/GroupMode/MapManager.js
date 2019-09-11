@@ -45,15 +45,11 @@ const MapManager = compose(
       //this.getQuestionMarkers(); same call in componentWillMount
     },
     componentDidUpdate(prevProps) {
-      console.log('update passed!');
       if (this.props === prevProps) return;
-      console.log('cur passed!', this.props);
-      console.log('pre passed!', prevProps);
     },
     // shouldComponentUpdate(nextProps, nextState) {
     // },
     componentWillReceiveProps(nextProps) {
-      console.log('recev passed!', this.props);
       // if (this.props.data === nextProps.data) return;
     },
   }),
@@ -72,7 +68,6 @@ const MapManager = compose(
   };
 
   const handleClickNew = event => {
-    console.log('eee', event);
     const { latLng } = event;
     const lat = latLng.lat();
     const lng = latLng.lng();
