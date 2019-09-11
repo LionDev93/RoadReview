@@ -159,14 +159,17 @@ class GroupMode extends Component {
   handleMarkerPos = (index, pos) => {
     this.state.questionArray[index].coords[0][0] = pos.lat;
     this.state.questionArray[index].coords[0][1] = pos.lng;
-    if (
-      this.state.questionArray[index].groups_locations &&
-      this.state.questionArray[index].kind === 'group'
-    ) {
-      this.state.questionArray[index].groups_locations = {
-        [this.state.groupName]: { lat: pos.lat, lon: pos.lng },
+    if (this.state.questionArray[index].kind === 'group') {
+      if (!this.state.questionArray[index].groups_locations)
+        this.state.questionArray[index].groups_locations = {};
+      this.state.questionArray[index].groups_locations[this.state.groupName] = {
+        lat: pos.lat,
+        lon: pos.lng,
       };
-      console.log('group location has changed');
+      console.log(
+        'group location has changed',
+        this.state.questionArray[index].groups_locations,
+      );
       // Object.keys(this.state.questionArray[index].groups_locations).map(
       //   item => {
       //     this.state.questionArray[index].groups_locations[item] = {
@@ -317,12 +320,6 @@ class GroupMode extends Component {
     } = this.state;
     return (
       <div>
-        <Dialog disableBackdropClick disableEscapeKeyDown open={isLoading}>
-          <DialogContent>
-            <CircularProgress />
-          </DialogContent>
-        </Dialog>
-
         <Grid style={{ padding: 8 }}>
           <Grid container>
             <Grid item xs={12} sm={5}>
@@ -642,6 +639,16 @@ class GroupMode extends Component {
               }
             })}
         </Grid>
+        <Dialog
+          style={{ minWidth: 100 }}
+          disableBackdropClick
+          disableEscapeKeyDown
+          open={isLoading}
+        >
+          <DialogContent>
+            <CircularProgress />
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
