@@ -28,13 +28,13 @@ const onPostGroupSaga = function*() {
       NotificationManager.success('Updated~');
       yield put({
         type: POST_RESULT,
-        payload: Math.random(),
+        payload: Math.random() * 100,
       });
     } catch (e) {
       console.log(e);
       yield put({
         type: POST_RESULT,
-        payload: Math.random(),
+        payload: Math.random() * 100,
       });
     }
   }
@@ -66,7 +66,7 @@ const onGetGroupSage = function*() {
       });
       yield put({
         type: POST_RESULT,
-        payload: Math.random(),
+        payload: Math.random() * 100,
       });
     } catch (e) {
       console.log(e);
@@ -76,7 +76,7 @@ const onGetGroupSage = function*() {
       });
       yield put({
         type: POST_RESULT,
-        payload: Math.random(),
+        payload: Math.random() * 100,
       });
     }
   }
