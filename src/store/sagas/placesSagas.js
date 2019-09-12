@@ -64,11 +64,19 @@ const onGetGroupSage = function*() {
         type: SET_GROUP_PLACES,
         payload: response,
       });
+      yield put({
+        type: POST_RESULT,
+        payload: 1,
+      });
     } catch (e) {
       console.log(e);
       yield put({
         type: SET_GROUP_PLACES,
         payload: null,
+      });
+      yield put({
+        type: POST_RESULT,
+        payload: 0,
       });
     }
   }

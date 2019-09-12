@@ -129,6 +129,7 @@ class GroupMode extends Component {
   };
 
   componentWillReceiveProps = nextProps => {
+    console.log('willReceiveProps called,', nextProps);
     const { group, updated } = nextProps;
     if (group === null) {
       NotificationManager.warning('Failed to load');
