@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import { Grid } from '@material-ui/core';
+import { Grid, DialogTitle } from '@material-ui/core';
 import Divider from '@material-ui/core/Divider';
 import TextField from '@material-ui/core/TextField';
 import Select from '@material-ui/core/Select';
@@ -27,6 +27,7 @@ import {
   clearGroupPlaces,
 } from '../../store/actions/placesActions';
 import { Checkbox } from '@material-ui/core';
+import EditNewItem from './EditNewItem';
 
 const styles = theme => ({
   card: {
@@ -72,6 +73,7 @@ class GroupMode extends Component {
 
       isLoading: false,
       isMapForLat: true,
+      isNewItemDlg: false,
     };
   }
 
@@ -138,15 +140,25 @@ class GroupMode extends Component {
     }
     var itemsAll = [];
     group.group_items.map(item => {
+      if (!item.coords) {
+        item.coords = [[32, 34]];
+      }
+
       item.kind = 'group';
       item.isDeleted = false;
       item.include_follow_up = true;
+
       itemsAll.push(item);
     });
     group.items.map(item => {
+      if (!item.coords) {
+        item.coords = [[32, 34]];
+      }
+
       item.kind = 'item';
       item.isDeleted = false;
       item.include_follow_up = true;
+
       itemsAll.push(item);
     });
 
@@ -191,60 +203,9 @@ class GroupMode extends Component {
       this.setState({ lat: pos.lat, lng: pos.lng });
       return;
     }
-    const gname = this.state.groupName;
-    const lat = pos.lat;
-    const lng = pos.lng;
-    this.state.questionArray.push({
-      answers: [],
-      assigned_user: null,
-      categories: [],
-      coords: [[pos.lat, pos.lng]],
-      datastore_id: undefined,
-      difficulty: undefined,
-      distance: undefined,
-      distance_to_edge: 0,
-      editor_username: undefined,
-      enabled: true,
-      extended_story: null,
-      extended_story_voices: [],
-      groups: [this.state.groupName],
-      groups_locations: undefined, //{123: {…}}
-      is_ready: true,
-      is_test: false,
-      item_id: undefined, //"4efa0461027ed3a0a3234e84cafe8a30"
-      labels: undefined, //["מודיעין-מכבים-רעות"]
-      last_modified: undefined, //"Wed, 24 Jul 2019 10:25:23 GMT"
-      lat: pos.lat,
-      lng: pos.lng,
-      night_item: false,
-      notes: null,
-      original_id: undefined,
-      parents: [],
-      place: undefined, //"GRP_מודיעין-מכבים-רעות"
-      place_relevancy: null,
-      question: '',
-      question_images: [],
-      question_videos: [],
-      qustion_voice: null,
-      raw_text: null,
-      related: [],
-      right_answer: '',
-      score: undefined,
-      see_item: false,
-      source: 'playbuzz',
-      story: '',
-      story_images: [],
-      story_ref: null,
-      story_videos: [],
-      story_voices: [],
-      submission_time: undefined,
-      tourists_relevancy: null,
-      type: 'question',
-      urlsafe: undefined,
-      writer_username: undefined, //"May"
-      kind: 'group',
-    });
-    this.setState({ questionArray: this.state.questionArray });
+
+    this.setState({ isNewItemDlg: true });
+    return;
   };
 
   handleRemoveItem = index => {
@@ -303,6 +264,76 @@ class GroupMode extends Component {
     questionArray[selectedIndex].kind = 'item';
     this.setState({ questionArray: questionArray });
   };
+
+  saveItem = data => {
+    this.state.questionArray.push({
+      answers: [
+        data.correctAnswer,
+        data.incorrectAnswer1,
+        data.incorrectAnswer2,
+        data.incorrectAnswer3,
+      ],
+      assigned_user: null,
+      categories: [],
+      coords: [[this.state.lat, this.state.lng]],
+      datastore_id: undefined,
+      difficulty: data.difficultyLevel,
+      distance: undefined,
+      distance_to_edge: 0,
+      editor_username: undefined,
+      enabled: true,
+      extended_story: null,
+      extended_story_voices: [],
+      groups: [this.state.groupName],
+      groups_locations: {
+        [this.state.groupName]: {
+          lat: this.state.lat,
+          lon: this.state.lng,
+        },
+      }, //{123: {…}}
+      is_ready: true,
+      is_test: false,
+      item_id: undefined, //"4efa0461027ed3a0a3234e84cafe8a30"
+      labels: undefined, //["מודיעין-מכבים-רעות"]
+      last_modified: undefined, //"Wed, 24 Jul 2019 10:25:23 GMT"
+      lat: this.state.lat,
+      lng: this.state.lng,
+      night_item: false,
+      notes: null,
+      original_id: undefined,
+      parents: [],
+      place: undefined, //"GRP_מודיעין-מכבים-רעות"
+      place_relevancy: null,
+      question: data.question,
+      question_images: [data.askingImg],
+      question_videos: [],
+      qustion_voice: null,
+      raw_text: null,
+      related: [],
+      right_answer: data.correctAnswer,
+      score: data.qualityLevel,
+      see_item: false,
+      source: 'playbuzz',
+      story: data.story,
+      story_images: data.replyImg,
+      story_ref: null,
+      story_videos: [],
+      story_voices: [],
+      submission_time: undefined,
+      tourists_relevancy: null,
+      type: 'question',
+      urlsafe: undefined,
+      writer_username: undefined, //"May"
+      kind: 'group',
+      isDeleted: false,
+      include_follow_up: true,
+    });
+    this.setState({
+      questionArray: this.state.questionArray,
+      isNewItemDlg: false,
+    });
+  };
+
   render() {
     const { classes } = this.props;
     const {
@@ -318,6 +349,7 @@ class GroupMode extends Component {
       isMapForLat,
 
       isLoading,
+      isNewItemDlg,
     } = this.state;
     return (
       <div>
@@ -502,7 +534,7 @@ class GroupMode extends Component {
               )}
             </Grid>
             <Grid item xs={12} sm={8}>
-              {/* <FormControlLabel
+              <FormControlLabel
                 style={{ marginLeft: 16 }}
                 control={
                   <Checkbox
@@ -514,7 +546,7 @@ class GroupMode extends Component {
                   />
                 }
                 label="use map for select lat,lng"
-              /> */}
+              />
               <MapManager
                 questionMarkers={questionArray}
                 center={
@@ -651,6 +683,15 @@ class GroupMode extends Component {
             }}
           >
             <CircularProgress />
+          </DialogContent>
+        </Dialog>
+        <Dialog maxWidth="md" open={isNewItemDlg}>
+          <DialogTitle>New Item</DialogTitle>
+          <DialogContent>
+            <EditNewItem
+              onSave={this.saveItem}
+              onCancel={() => this.setState({ isNewItemDlg: false })}
+            ></EditNewItem>
           </DialogContent>
         </Dialog>
       </div>

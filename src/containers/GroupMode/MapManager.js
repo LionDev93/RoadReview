@@ -97,8 +97,12 @@ const MapManager = compose(
                   <Marker
                     key={index}
                     position={{
-                      lat: parseFloat(question.coords[0][0]),
-                      lng: parseFloat(question.coords[0][1]),
+                      lat: question.coords
+                        ? parseFloat(question.coords[0][0])
+                        : 32,
+                      lng: question.coords
+                        ? parseFloat(question.coords[0][1])
+                        : 34,
                     }}
                     icon={question.kind === 'group' ? markerIcon : ''}
                     draggable={true}
